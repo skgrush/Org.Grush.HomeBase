@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PublishAot>true</PublishAot>
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FluentModbus" />
+      <PackageReference Include="System.IO.Ports" />
+    </ItemGroup>
+    
+    <ItemGroup>
+<!--      <ClCompile Include="dfrobot-example.cpp" />-->
+    </ItemGroup>
+
+</Project>
