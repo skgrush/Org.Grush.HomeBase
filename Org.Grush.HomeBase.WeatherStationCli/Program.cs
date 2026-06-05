@@ -39,11 +39,13 @@ RootCommand command = new("HomeBase WeatherStationCli")
   helpOption,
 };
 
+Console.Error.WriteLine($"Args: {string.Join(' ', args)}");
 ParseResult parseResult = command.Parse(args);
+var invoked = await parseResult.InvokeAsync();
+Console.Error.WriteLine($"Invoked: {invoked}");
+
 if (parseResult.GetResult(helpOption) is not null)
   return await parseResult.InvokeAsync();
-
-
 
 if (parseResult.Errors.Count is not 0)
 {
