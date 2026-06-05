@@ -61,10 +61,10 @@ async Task<int> Run(ParseResult parseResult)
 {
   using RaspberryPiBoard testBoard = new();
   Console.Error.WriteLine("Tested board");
-  using var driver = new RaspberryPi3Driver();
-  Console.Error.WriteLine("Tested driver");
-  testBoard.CreateGpioController();
-  Console.Error.WriteLine("Tested gpio controller");
+  // using var driver = new Rasp();
+  // Console.Error.WriteLine("Tested driver");
+  var controller = testBoard.CreateGpioController();
+  Console.Error.WriteLine($"Tested gpio controller {controller.GetType()}");
 
   using Board board = Board.Create();
 
