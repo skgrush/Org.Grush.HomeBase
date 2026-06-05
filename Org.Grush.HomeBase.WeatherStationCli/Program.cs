@@ -2,6 +2,7 @@
 
 using System.CommandLine;
 using System.CommandLine.Help;
+using System.Device.Gpio.Drivers;
 using System.Device.Spi;
 using System.Text.Json;
 using Iot.Device.Board;
@@ -58,6 +59,12 @@ return invoked;
 
 async Task<int> Run(ParseResult parseResult)
 {
+  using RaspberryPiBoard testBoard = new();
+  Console.Error.WriteLine("Tested board");
+  using var driver = new RaspberryPi3Driver();
+  Console.Error.WriteLine("Tested driver");
+  testBoard.CreateGpioController();
+  Console.Error.WriteLine("Tested gpio controller");
 
   using Board board = Board.Create();
 
