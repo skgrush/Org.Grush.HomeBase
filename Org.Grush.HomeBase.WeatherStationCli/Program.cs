@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.CommandLine;
+using System.CommandLine.Help;
 using System.Device.Spi;
 using System.Text.Json;
 using Iot.Device.Board;
@@ -33,7 +34,8 @@ Option<byte?> loopOption = new("--loop")
 RootCommand command = new("HomeBase WeatherStationCli")
 {
   busIdOption,
-  baudRateOption
+  baudRateOption,
+  new HelpOption()
 };
 
 ParseResult parseResult = command.Parse(args);
@@ -53,8 +55,6 @@ try
 {
   var componentInformation = board.QueryComponentInformation();
   BoardPrinter.PrintComponentInfo(componentInformation, "");
-
-
 }
 catch {}
 
