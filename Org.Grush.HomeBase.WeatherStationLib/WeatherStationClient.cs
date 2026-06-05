@@ -54,7 +54,6 @@ public sealed class WeatherStationClient : IAsyncDisposable
     StopBits = StopBits.One,
     Handshake = Handshake.None,
   };
-  private readonly string _port;
   private readonly byte _modbusUnitIdentifier;
 
   public const int DefaultBaud = 4800;
@@ -71,19 +70,41 @@ public sealed class WeatherStationClient : IAsyncDisposable
   ];
 
   public WeatherStationClient(
-    string port,
+    IModbusRtuSerialPort modbusPort,
+    byte modbusUnitIdentifier,
+    int? baudRate
+  ) : this((modbusPort, null), modbusUnitIdentifier, baudRate)
+  { }
+  public WeatherStationClient(
+    string portName,
+    byte modbusUnitIdentifier,
+    int? baudRate
+  ) : this((null, portName), modbusUnitIdentifier, baudRate)
+  { }
+
+  public WeatherStationClient(
+    (IModbusRtuSerialPort? modbusPort, string? portName) portOptions,
     byte modbusUnitIdentifier,
     int? baudRate
   )
   {
-    _port = port;
     _modbusUnitIdentifier = modbusUnitIdentifier;
 
     if (baudRate is not null && !SupportedBauds.ContainsValue(modbusUnitIdentifier))
       throw new ArgumentOutOfRangeException(nameof(baudRate), baudRate, $"baudRate must be one of {string.Join(',', SupportedBauds)}");
 
     rtuClient.BaudRate = baudRate ?? DefaultBaud;
-    rtuClient.Connect(_port, ModbusEndianness.BigEndian);
+    switch (portOptions)
+    {
+      case ({} modbusPort, _):
+        rtuClient.Initialize(modbusPort, ModbusEndianness.BigEndian);
+        break;
+      case (_, {} portName):
+        rtuClient.Connect(portName, ModbusEndianness.BigEndian);
+        break;
+      default:
+        throw new ArgumentException("WeatherStationClient ctor invalid portOptions");
+    }
   }
 
   public bool Cancelled { get; private set; }

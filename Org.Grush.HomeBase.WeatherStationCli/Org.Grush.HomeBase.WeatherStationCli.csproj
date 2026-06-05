@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PublishAot>true</PublishAot>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
+        <Configuration>Release</Configuration>
+        <DebugType>embedded</DebugType>
+        <StripSymbols>false</StripSymbols>
+        <TrimMode>full</TrimMode>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ExtraLinkerArg Include="-v" />
+      <LinkerArg Include="-v" />
+      
+      <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStationLib\Org.Grush.HomeBase.WeatherStationLib.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Iot.Device.Bindings" />
+      <PackageReference Include="System.CommandLine" />
+    </ItemGroup>
+
+</Project>

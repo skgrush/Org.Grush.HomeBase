@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="Org.Grush.HomeBase.WeatherStationCli/Org.Grush.HomeBase.WeatherStationCli.csproj" />
   <Project Path="Org.Grush.HomeBase.WeatherStationLib/Org.Grush.HomeBase.WeatherStationLib.csproj" />
 </Solution>

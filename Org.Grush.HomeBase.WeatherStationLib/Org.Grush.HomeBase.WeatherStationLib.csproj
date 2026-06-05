@@ -6,11 +6,13 @@
         <Nullable>enable</Nullable>
         <PublishAot>true</PublishAot>
         <IsAotCompatible>true</IsAotCompatible>
+        <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
+        <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="FluentModbus" />
-      <PackageReference Include="System.IO.Ports" />
+      <PackageReference Include="System.Device.Gpio" />
     </ItemGroup>
     
     <ItemGroup>
