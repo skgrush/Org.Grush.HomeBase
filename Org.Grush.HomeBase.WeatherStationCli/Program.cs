@@ -30,15 +30,20 @@ Option<byte?> loopOption = new("--loop")
 {
   Arity = ArgumentArity.ZeroOrOne,
 };
+HelpOption helpOption = new();
 
 RootCommand command = new("HomeBase WeatherStationCli")
 {
   busIdOption,
   baudRateOption,
-  new HelpOption()
+  helpOption,
 };
 
 ParseResult parseResult = command.Parse(args);
+if (parseResult.GetResult(helpOption) is not null)
+  return await parseResult.InvokeAsync();
+
+
 
 if (parseResult.Errors.Count is not 0)
 {
