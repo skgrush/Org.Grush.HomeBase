@@ -109,12 +109,15 @@ public sealed class WeatherStationClient : IAsyncDisposable
 
   public bool Cancelled { get; private set; }
 
-  public async Task<AllData> ReadAllDataAsync()
+  public async Task<AllData> ReadAllDataAsync(CancellationToken cancellationToken)
   {
+    var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
     var result = await rtuClient.ReadHoldingRegistersAsync<ushort>(
       unitIdentifier: _modbusUnitIdentifier,
       startingAddress: 0x01_F0,
-      count: 16
+      count: 16,
+      cancellationToken: ct
     );
 
     return new(
@@ -132,12 +135,15 @@ public sealed class WeatherStationClient : IAsyncDisposable
     );
   }
 
-  public async Task<WindSpeedAndDirection> ReadWindSpeedAndDirectionAsync()
+  public async Task<WindSpeedAndDirection> ReadWindSpeedAndDirectionAsync(CancellationToken cancellationToken)
   {
+    var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
     var result = await rtuClient.ReadHoldingRegistersAsync<ushort>(
       unitIdentifier: _modbusUnitIdentifier,
       startingAddress: 0x01_F4,
-      count: 4
+      count: 4,
+      cancellationToken: ct
     );
 
     return new(

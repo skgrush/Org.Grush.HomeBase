@@ -126,7 +126,7 @@ async Task<int> Run(ParseResult parseResult)
       //   DateTimeOffset.Now,
       //   JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.AllData)
       // );
-      var results = await client.ReadWindSpeedAndDirectionAsync();
+      var results = await client.ReadWindSpeedAndDirectionAsync(cts.Token);
       Console.WriteLine(
         "\"{0}\": {1},\n",
         DateTimeOffset.Now,
