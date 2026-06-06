@@ -2,10 +2,10 @@
 
 using System.CommandLine;
 using System.CommandLine.Help;
+using System.Device.Gpio;
 using System.Device.Gpio.Drivers;
 using System.Device.Spi;
 using System.Text.Json;
-using Iot.Device.Board;
 using Org.Grush.HomeBase.WeatherStationLib;
 
 Option<int> busIdOption = new("--bus")
@@ -59,34 +59,37 @@ return invoked;
 
 async Task<int> Run(ParseResult parseResult)
 {
-  using RaspberryPiBoard testBoard = new();
-  Console.Error.WriteLine("Tested board");
-  // using var driver = new Rasp();
+  // using RaspberryPiBoard testBoard = new();
+  // Console.Error.WriteLine("Tested board");
+  // using var driver = new RaspberryPi3Driver();
   // Console.Error.WriteLine("Tested driver");
-  var controller = testBoard.CreateGpioController();
-  Console.Error.WriteLine($"Tested gpio controller {controller.GetType()}");
+  // var controller = testBoard.CreateGpioController();
+  // Console.Error.WriteLine($"Tested gpio controller {controller.GetType()}");
+  //
+  // using Board board = Board.Create();
+  //
+  // try
+  // {
+  //   var componentInformation = board.QueryComponentInformation();
+  //   BoardPrinter.PrintComponentInfo(componentInformation, "");
+  // }
+  // catch
+  // {
+  // }
+  //
+  // if (board is RaspberryPiBoard piBoard)
+  // {
+  //   if (!piBoard.IsSpiActivated())
+  //   {
+  //     Console.Error.WriteLine("SPI is not activated");
+  //     return 2;
+  //   }
+  // }
 
-  using Board board = Board.Create();
+  using LibGpiodV2Driver driver = new(4);
+  using GpioController controller = new(driver);
 
-  try
-  {
-    var componentInformation = board.QueryComponentInformation();
-    BoardPrinter.PrintComponentInfo(componentInformation, "");
-  }
-  catch
-  {
-  }
-
-  if (board is RaspberryPiBoard piBoard)
-  {
-    if (!piBoard.IsSpiActivated())
-    {
-      Console.Error.WriteLine("SPI is not activated");
-      return 2;
-    }
-  }
-
-  using SpiDevice spiDevice = board.CreateSpiDevice(new(
+  using SpiDevice spiDevice = SpiDevice.Create(new(
     busId: parseResult.GetRequiredValue(busIdOption),
     chipSelectLine: parseResult.GetValue(chipSelectLineOption) ?? -1
   ));
