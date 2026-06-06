@@ -108,18 +108,29 @@ async Task<int> Run(ParseResult parseResult)
     ;
 
   CancellationTokenSource cts = new();
-  Console.CancelKeyPress += (_, _) => cts.Cancel();
+  Console.CancelKeyPress += (x, y) =>
+  {
+    // cancel the cancelling, then cancel the cancellation (token)
+    y.Cancel = true;
+    cts.Cancel();
+  };
 
   try
   {
     Console.WriteLine("{\n");
     while (!cts.Token.IsCancellationRequested && !client.Cancelled)
     {
-      var results = await client.ReadAllDataAsync();
+      // var results = await client.ReadAllDataAsync();
+      // Console.WriteLine(
+      //   "\"{0}\": {1},\n",
+      //   DateTimeOffset.Now,
+      //   JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.AllData)
+      // );
+      var results = await client.ReadWindSpeedAndDirectionAsync();
       Console.WriteLine(
         "\"{0}\": {1},\n",
         DateTimeOffset.Now,
-        JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.AllData)
+        JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.WindSpeedAndDirection)
       );
 
       if (loopTimeout is null)

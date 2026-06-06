@@ -90,7 +90,7 @@ public sealed class WeatherStationClient : IAsyncDisposable
   {
     _modbusUnitIdentifier = modbusUnitIdentifier;
 
-    if (baudRate is not null && !SupportedBauds.ContainsValue(modbusUnitIdentifier))
+    if (baudRate is not null && !SupportedBauds.ContainsValue(baudRate.Value))
       throw new ArgumentOutOfRangeException(nameof(baudRate), baudRate, $"baudRate must be one of {string.Join(',', SupportedBauds)}");
 
     rtuClient.BaudRate = baudRate ?? DefaultBaud;
@@ -132,13 +132,10 @@ public sealed class WeatherStationClient : IAsyncDisposable
     );
   }
 
-  public async Task<WindSpeedAndDirection> ReadWindSpeedAndDirectionAsync(string port, byte unitIdentifier)
+  public async Task<WindSpeedAndDirection> ReadWindSpeedAndDirectionAsync()
   {
-
-    rtuClient.Connect(port, ModbusEndianness.BigEndian);
-
     var result = await rtuClient.ReadHoldingRegistersAsync<ushort>(
-      unitIdentifier: unitIdentifier,
+      unitIdentifier: _modbusUnitIdentifier,
       startingAddress: 0x01_F4,
       count: 4
     );
