@@ -8,6 +8,7 @@ using System.Device.Spi;
 using System.IO.Ports;
 using System.Text.Json;
 using Iot.Device.Common;
+using Microsoft.Extensions.Logging;
 using Org.Grush.HomeBase.WeatherStationLib;
 using Org.Grush.Port.DFRobot.CH432T;
 
@@ -115,7 +116,9 @@ async Task<int> Run(ParseResult parseResult)
     parity: Parity.None,
     baudRate: parseResult.GetValue(baudRateOption)
   );
+  logger.LogInformation("Opening rtuSpiPort");
   await rtuSpiPort.Open(cancellationToken: cts.Token);
+  logger.LogInformation("Opened rtuSpiPort");
 
   await using WeatherStationClient client = new(
     rtuSpiPort,
@@ -129,9 +132,9 @@ async Task<int> Run(ParseResult parseResult)
         : (parseResult.GetValue(loopOption) ?? 5)
     ;
 
-
   Console.CancelKeyPress += (x, y) =>
   {
+    logger.LogInformation("<CancelKeyPress>");
     // cancel the cancelling, then cancel the cancellation (token)
     y.Cancel = true;
     cts.Cancel();

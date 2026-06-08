@@ -194,9 +194,9 @@ public class ModbusRtuDfrobotCh432tSpiPort(
   public override async ValueTask Open(bool isAsync = true, CancellationToken cancellationToken = default)
   {
     byte iir = await ReadRegister(Ch432tRegisterDefinition.IIR, isAsync, cancellationToken);
-    logger.LogInformation("CH432T_IIR_REG = {iir:x}", iir);
+    logger.LogInformation("[Open()] CH432T_IIR_REG = {iir:x}", iir);
     byte lsr = await ReadRegister(Ch432tRegisterDefinition.LSR, isAsync, cancellationToken);
-    logger.LogInformation("CH432T_LSR_REG = {lsr:x}", lsr);
+    logger.LogInformation("[Open()] CH432T_LSR_REG = {lsr:x}", lsr);
 
     await WriteRegister(Ch432tRegisterDefinition.SCR, new byte[] { 0x66 }, isAsync, cancellationToken);
     byte scr = await ReadRegister(Ch432tRegisterDefinition.SCR,  isAsync, cancellationToken);
@@ -329,7 +329,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
           // Interrupt for receiving line status, priority: 1
           // Line status register, used to analyze serial port status by query
           await GetLinesStatus(linesStatus, isAsync, cancellationToken);
-          logger.LogInformation("Unknown LSR interrupt state");
+          logger.LogWarning("[PortIrq()] Unknown LSR interrupt state");
           if (linesStatus.RFifoErr)
           {
             // logger.info("lines_status.r_fifo_err")
@@ -361,11 +361,11 @@ public class ModbusRtuDfrobotCh432tSpiPort(
           // MODEM output change interrupt, priority: 4
           ModemConfigReg modemConfigReg = new();
           await ReadRegister(Ch432tRegisterDefinition.MSR, modemConfigReg,  isAsync, cancellationToken);
-          logger.LogInformation("msr---{modemReg:x}", modemConfigReg);
+          logger.LogInformation("[PortIrq()] msr---{modemReg:x}", modemConfigReg);
           break;
 
-        default:
-          logger.LogInformation("Unknown interrupt state");
+        case var intType:
+          logger.LogWarning("[PortIrq()] Unknown interrupt state {int}", intType);
           break;
       }
 
@@ -406,7 +406,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
 
     // Save raw value of LCR register
     byte lcr = await ReadRegister(Ch432tRegisterDefinition.LCR, isAsync, token);
-    logger.LogInformation("lcr = {lcr:x}", lcr);
+    logger.LogInformation("[SetBaudRate()] lcr = {lcr:x}", lcr);
     // Open the LCR divisors for configuration
     await WriteRegister(Ch432tRegisterDefinition.LCR, CH432T_LCR_CONF_MODE_A, isAsync, token);
     await Sleeper(TimeSpan.FromMilliseconds(2), isAsync, token);
@@ -500,12 +500,12 @@ public class ModbusRtuDfrobotCh432tSpiPort(
     regAddrWriteRequest <<= CH432T_REG_SHIFT;
     regAddrWriteRequest |= 0x02;
 
-    logger.LogInformation("portnum = {portNum}, reg = {reg}, reg_addr = {regAddr}, data = {data:x}",
+    logger.LogInformation("[WriteRegister()] portnum = {portNum}, reg = {reg}, reg_addr = {regAddr}, data = {data:x}",
       PortNumber, register, regAddrWriteRequest, data.Span[0]);
 
     byte[] toWrite = [regAddrWriteRequest, ..data.Span];
     // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-    base.Write(toWrite);
+    base.Write(toWrite.AsMemory());
 
     await Sleeper(TimeSpan.FromMilliseconds(2), isAsync, cancellationToken);
   }
