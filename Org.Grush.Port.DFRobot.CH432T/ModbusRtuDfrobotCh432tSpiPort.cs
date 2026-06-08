@@ -198,7 +198,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
     byte lsr = await ReadRegister(Ch432tRegisterDefinition.LSR, isAsync, cancellationToken);
     logger.LogInformation("[Open()] CH432T_LSR_REG = {lsr:x}", lsr);
 
-    await WriteRegister(Ch432tRegisterDefinition.SCR, new byte[] { 0x66 }, isAsync, cancellationToken);
+    await WriteRegister(Ch432tRegisterDefinition.SCR, 0x66, isAsync, cancellationToken);
     byte scr = await ReadRegister(Ch432tRegisterDefinition.SCR,  isAsync, cancellationToken);
     if (scr is not 0x66)
     {
@@ -504,10 +504,12 @@ public class ModbusRtuDfrobotCh432tSpiPort(
       PortNumber, register, regAddrWriteRequest, data.Span[0]);
 
     byte[] toWrite = [regAddrWriteRequest, ..data.Span];
-    // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-    base.Write(toWrite.AsMemory());
+    // ReSharper disable once MethodHasAsyncOverloadWithCancellatio
+    // base.Write(toWrite.AsMemory());
 
-    await Sleeper(TimeSpan.FromMilliseconds(2), isAsync, cancellationToken);
+    base.TransferFullDuplex(toWrite);
+
+    await Sleeper(TimeSpan.FromMilliseconds(1), isAsync, cancellationToken);
   }
 
   protected ValueTask Sleeper(TimeSpan time, bool isAsync, CancellationToken cancellationToken)
