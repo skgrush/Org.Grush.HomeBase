@@ -35,6 +35,7 @@ HelpOption helpOption = new();
 RootCommand command = new("HomeBase WeatherStationCli")
 {
   busIdOption,
+  chipSelectLineOption,
   baudRateOption,
   helpOption,
 };
@@ -89,10 +90,16 @@ async Task<int> Run(ParseResult parseResult)
   using LibGpiodV2Driver driver = new(4);
   using GpioController controller = new(driver);
 
-  using SpiDevice spiDevice = SpiDevice.Create(new(
+  SpiConnectionSettings spiConnectionSettings = new(
     busId: parseResult.GetRequiredValue(busIdOption),
     chipSelectLine: parseResult.GetValue(chipSelectLineOption) ?? -1
-  ));
+  )
+  {
+    ClockFrequency = 1_000_000,
+    Mode = SpiMode.Mode0,
+    DataBitLength = 8,
+  };
+
   using ModbusRtuSpiPort rtuSpiPort = new(spiDevice);
 
   await using WeatherStationClient client = new(

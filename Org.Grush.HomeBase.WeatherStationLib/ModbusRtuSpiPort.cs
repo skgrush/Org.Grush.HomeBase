@@ -3,54 +3,89 @@ using FluentModbus;
 
 namespace Org.Grush.HomeBase.WeatherStationLib;
 
-public sealed class ModbusRtuSpiPort(SpiDevice spiDevice) : IModbusRtuSerialPort, IDisposable
+public class ModbusRtuSpiPort(SpiConnectionSettings spiConnectionSettings) : IModbusRtuSerialPort, IDisposable
 {
   private bool _disposed;
+  public bool? IsOpen { get; private set; }
+  bool IModbusRtuSerialPort.IsOpen => IsOpen is true;
 
-  public int Read(byte[] buffer, int offset, int count)
+  private readonly SpiDevice _spiDevice = SpiDevice.Create(spiConnectionSettings);
+
+  protected void TransferFullDuplex(ReadOnlySpan<byte> writeBuffer, Span<byte> readBuffer)
+  {
+    _spiDevice.TransferFullDuplex(writeBuffer, readBuffer);
+  }
+  protected void TransferFullDuplex(Span<byte> duplexBuffer)
+  {
+    Span<byte> readBuffer = stackalloc byte[duplexBuffer.Length];
+    _spiDevice.TransferFullDuplex(duplexBuffer, readBuffer);
+    readBuffer.CopyTo(duplexBuffer);
+  }
+
+  public int Read(byte[] buffer, int offset = 0, int count = -1) => Read(buffer.AsSpan(offset, count));
+  public virtual int Read(Span<byte> buffer)
   {
     ObjectDisposedException.ThrowIf(_disposed, this);
 
-    spiDevice.Read(buffer.AsSpan(start: offset, length: count));
-    return count;
+    _spiDevice.Read(buffer);
+    return buffer.Length;
   }
 
-  public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken token)
+  public virtual Task<int> ReadAsync(byte[] buffer, int offset = 0, int count = -1, CancellationToken token = default)
+    => ReadAsync(buffer.AsSpan(offset, count), token);
+  public virtual Task<int> ReadAsync(Span<byte> buffer, CancellationToken token = default)
   {
     token.ThrowIfCancellationRequested();
-    return Task.FromResult(Read(buffer, offset, count));
+    return Task.FromResult(Read(buffer));
   }
 
-  public void Write(byte[] buffer, int offset, int count)
+  public void Write(byte[] buffer, int offset = 0, int count = -1) => Write(buffer.AsSpan(offset, count));
+  public virtual void Write(ReadOnlySpan<byte> buffer)
   {
     ObjectDisposedException.ThrowIf(_disposed, this);
 
-    spiDevice.Write(buffer.AsSpan(start: offset, length: count));
+    _spiDevice.Write(buffer);
   }
 
-  public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken token)
+  public virtual Task WriteAsync(byte[] buffer, int offset = 0, int count = -1, CancellationToken token = default)
+    => WriteAsync(buffer.AsSpan(offset, count), token);
+  public virtual Task WriteAsync(ReadOnlySpan<byte> buffer, CancellationToken token = default)
   {
     token.ThrowIfCancellationRequested();
-    Write(buffer, offset, count);
+
+    Write(buffer);
     return Task.CompletedTask;
   }
 
-  public void Open() { }
+  public virtual void Open()
+  {
+    IsOpen = true;
+  }
 
   public void Close()
   {
-    if (_disposed) return;
-    _disposed = true;
-    spiDevice.Dispose();
+    if (IsOpen is not true)
+      return;
+
+    IsOpen = false;
   }
 
-  public void Dispose()
+  public string PortName =>
+    $"/dev/spidev{_spiDevice.ConnectionSettings.BusId}.{_spiDevice.ConnectionSettings.ChipSelectLine}";
+
+  public void Dispose() {
+    Dispose(true);
+    GC.SuppressFinalize(this);
+  }
+
+  protected virtual void Dispose(bool disposing)
   {
+    if (!disposing)
+      return;
+
     Close();
+    _disposed = true;
+
+    _spiDevice.Dispose();
   }
-
-  public string PortName { get; } =
-    $"/dev/spidev{spiDevice.ConnectionSettings.BusId}.{spiDevice.ConnectionSettings.ChipSelectLine}";
-
-  public bool IsOpen => !_disposed;
 }
