@@ -1,4 +1,4 @@
-namespace Org.Grush.HomeBase.WeatherStationLib.Ch432t;
+namespace Org.Grush.Port.DFRobot.CH432T;
 
 /// <remarks>
 ///       @brief MODEM control register, control MODEM output

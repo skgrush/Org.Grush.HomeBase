@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+// using System.ComponentModel.DataAnnotations;
 
-namespace Org.Grush.HomeBase.WeatherStationLib.Ch432t;
+namespace Org.Grush.Port.DFRobot.CH432T;
 
 public abstract class ByteStructure(byte initial)
 {
@@ -9,12 +9,12 @@ public abstract class ByteStructure(byte initial)
   public byte Read() => _value;
   public void Write(byte value) => _value = value;
 
-  public bool ReadBit([Range(0, 7)] byte lsbIdx)
+  public bool ReadBit(/*[Range(0, 7)]*/ byte lsbIdx)
     => ReadBitFromMask((byte)(1 << lsbIdx));
 
   protected bool ReadBitFromMask(byte mask) => mask == (_value & mask);
 
-  public void WriteBit(bool bit, [Range(0, 7)] byte lsbIdx)
+  public void WriteBit(bool bit, /*[Range(0, 7)]*/ byte lsbIdx)
     => WriteBitFromMask(bit, (byte)(1 << lsbIdx));
 
   protected void WriteBitFromMask(bool bit, byte mask)

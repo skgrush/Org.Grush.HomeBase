@@ -22,6 +22,8 @@
       <LinkerArg Include="-v" />
       
       <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStationLib\Org.Grush.HomeBase.WeatherStationLib.csproj" />
+      
+      <ProjectReference Include="..\Org.Grush.Port.DFRobot.CH432T\Org.Grush.Port.DFRobot.CH432T.csproj" />
     </ItemGroup>
 
     <ItemGroup>

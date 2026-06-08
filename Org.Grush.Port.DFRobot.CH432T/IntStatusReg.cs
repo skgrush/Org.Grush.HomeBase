@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Org.Grush.HomeBase.WeatherStationLib.Ch432t;
+namespace Org.Grush.Port.DFRobot.CH432T;
 
 /// <summary>Interrupt identity register, used to analyze and process the interrupt source</summary>
 /// <remarks>

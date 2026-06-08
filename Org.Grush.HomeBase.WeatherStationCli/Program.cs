@@ -5,8 +5,11 @@ using System.CommandLine.Help;
 using System.Device.Gpio;
 using System.Device.Gpio.Drivers;
 using System.Device.Spi;
+using System.IO.Ports;
 using System.Text.Json;
+using Iot.Device.Common;
 using Org.Grush.HomeBase.WeatherStationLib;
+using Org.Grush.Port.DFRobot.CH432T;
 
 Option<int> busIdOption = new("--bus")
 {
@@ -90,6 +93,8 @@ async Task<int> Run(ParseResult parseResult)
   using LibGpiodV2Driver driver = new(4);
   using GpioController controller = new(driver);
 
+  SimpleConsoleLogger logger = new("Program");
+
   SpiConnectionSettings spiConnectionSettings = new(
     busId: parseResult.GetRequiredValue(busIdOption),
     chipSelectLine: parseResult.GetValue(chipSelectLineOption) ?? -1
@@ -100,7 +105,17 @@ async Task<int> Run(ParseResult parseResult)
     DataBitLength = 8,
   };
 
-  using ModbusRtuSpiPort rtuSpiPort = new(spiDevice);
+  CancellationTokenSource cts = new();
+
+  using ModbusRtuDfrobotCh432tSpiPort rtuSpiPort = new(
+    spiConnectionSettings,
+    Ch432tPortNumber.Port2,
+    logger,
+    stopBits: StopBits.One,
+    parity: Parity.None,
+    baudRate: parseResult.GetValue(baudRateOption)
+  );
+  await rtuSpiPort.Open(cancellationToken: cts.Token);
 
   await using WeatherStationClient client = new(
     rtuSpiPort,
@@ -114,7 +129,7 @@ async Task<int> Run(ParseResult parseResult)
         : (parseResult.GetValue(loopOption) ?? 5)
     ;
 
-  CancellationTokenSource cts = new();
+
   Console.CancelKeyPress += (x, y) =>
   {
     // cancel the cancelling, then cancel the cancellation (token)
