@@ -35,12 +35,21 @@ Option<byte?> loopOption = new("--loop")
 {
   Arity = ArgumentArity.ZeroOrOne,
 };
+
+Option<SpiMode> spiModeOption = new("--spi-mode")
+{
+  Arity = ArgumentArity.ExactlyOne,
+  CustomParser = argumentResult => (SpiMode)int.Parse(argumentResult.Tokens.FirstOrDefault()?.Value ?? "0")
+};
+spiModeOption.AcceptOnlyFromAmong(["0", "1", "2", "3"]);
+
 HelpOption helpOption = new();
 RootCommand command = new("HomeBase WeatherStationCli")
 {
   busIdOption,
   chipSelectLineOption,
   baudRateOption,
+  spiModeOption,
   helpOption,
 };
 command.SetAction(Run);
@@ -102,7 +111,7 @@ async Task<int> Run(ParseResult parseResult)
   )
   {
     ClockFrequency = 1_000_000,
-    Mode = SpiMode.Mode0,
+    Mode = parseResult.GetValue(spiModeOption),
     DataBitLength = 8,
   };
 
