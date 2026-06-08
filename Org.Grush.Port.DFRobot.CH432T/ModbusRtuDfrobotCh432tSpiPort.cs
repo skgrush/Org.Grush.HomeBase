@@ -452,7 +452,9 @@ public class ModbusRtuDfrobotCh432tSpiPort(
 
       if (linesStatus.DataReady)
       {
-        buffer.Span[idx] = await ReadRegister(Ch432tRegisterDefinition.RBR, isAsync, cancellationToken);
+        // [...] Memory<byte> buffer [...]
+        byte byteValue = await ReadRegister(Ch432tRegisterDefinition.RBR, isAsync, cancellationToken);
+        buffer.Span[idx] = byteValue;
         ++idx;
       }
       else if (idx >= buffer.Length)
@@ -475,7 +477,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
     byte[] transferBytes = [regAddrReadRequest, 0xFF];
     TransferFullDuplex(transferBytes);
 
-    await Sleeper(TimeSpan.FromMicroseconds(100), isAsync, token);
+    await Sleeper(TimeSpan.FromMilliseconds(0.1), isAsync, token);
 
     return transferBytes[1];
   }
