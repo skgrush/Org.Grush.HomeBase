@@ -21,7 +21,7 @@ Option<int> busIdOption = new("--bus")
 
 Option<int?> chipSelectLineOption = new("--chip-select-line")
 {
-  Description = "Specifies the bus identifier, e.g. the Y in /dev/spidevX.Y",
+  Description = "Specifies the chip select, e.g. the Y in /dev/spidevX.Y",
   Arity = ArgumentArity.ExactlyOne,
 };
 
@@ -36,12 +36,14 @@ Option<byte?> loopOption = new("--loop")
   Arity = ArgumentArity.ZeroOrOne,
 };
 
-Option<SpiMode> spiModeOption = new("--spi-mode")
+Option<SpiMode?> spiModeOption = new("--spi-mode")
 {
-  Arity = ArgumentArity.ExactlyOne,
-  CustomParser = argumentResult => (SpiMode)int.Parse(argumentResult.Tokens.FirstOrDefault()?.Value ?? "0")
+  Arity = ArgumentArity.ZeroOrOne,
+  CustomParser = argumentResult => argumentResult.Tokens.FirstOrDefault()?.Value is {} value
+    ? (SpiMode)int.Parse(value)
+    : (SpiMode?)null
 };
-spiModeOption.AcceptOnlyFromAmong(["0", "1", "2", "3"]);
+spiModeOption.AcceptOnlyFromAmong("0", "1", "2", "3");
 
 HelpOption helpOption = new();
 RootCommand command = new("HomeBase WeatherStationCli")
@@ -111,9 +113,10 @@ async Task<int> Run(ParseResult parseResult)
   )
   {
     ClockFrequency = 1_000_000,
-    Mode = parseResult.GetValue(spiModeOption),
     DataBitLength = 8,
   };
+  if (parseResult.GetValue(spiModeOption) is SpiMode mode)
+    spiConnectionSettings.Mode = mode;
 
   CancellationTokenSource cts = new();
 

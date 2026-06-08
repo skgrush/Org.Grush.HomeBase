@@ -52,8 +52,10 @@ public static class Extensions
   {
     public bool IsPortSpecific() => reg
       is Ch432tRegisterDefinition.RBR
+      or Ch432tRegisterDefinition.THR
       or Ch432tRegisterDefinition.IER
       or Ch432tRegisterDefinition.IIR
+      or Ch432tRegisterDefinition.LSR
       or Ch432tRegisterDefinition.LCR;
   }
 }
