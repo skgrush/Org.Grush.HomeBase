@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Device.Spi;
 using System.IO.Ports;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -195,6 +196,9 @@ public class ModbusRtuDfrobotCh432tSpiPort(
 
   public override async ValueTask Open(bool isAsync = true, CancellationToken cancellationToken = default)
   {
+    if (IsOpen is true)
+      return;
+
     byte iir = await ReadRegister(Ch432tRegisterDefinition.IIR, isAsync, cancellationToken);
     logger.LogInformation("[Open()] CH432T_IIR_REG = {iir:x}", iir);
     byte lsr = await ReadRegister(Ch432tRegisterDefinition.LSR, isAsync, cancellationToken);
@@ -399,9 +403,9 @@ public class ModbusRtuDfrobotCh432tSpiPort(
     // Set prescaler
     byte reg = (byte)Ch432tRegisterDefinition.IER;
     // TODO: why do we offset by 0x08 for port ONE here where we normally offset by 0x08 for port TWO???
-    if (portNumber is Ch432tPortNumber.Port1)   // regular register
+    if (PortNumber is Ch432tPortNumber.Port1)   // regular register
     {
-      reg = (byte)Ch432tRegisterDefinition.IER + 0x08;
+      reg += 0x08;
     }
 
     await RegBitUpdate((Ch432tRegisterDefinition)reg, (byte)Ch432IerBits.CK2X, prescaler,  isAsync, token);
@@ -490,6 +494,23 @@ public class ModbusRtuDfrobotCh432tSpiPort(
     into.Write(value);
   }
 
+  struct ByteArrayWrapper(ReadOnlyMemory<byte> bytes) : IFormattable
+  {
+    public string ToString(string? format, IFormatProvider? formatProvider)
+    {
+      ReadOnlyMemory<byte> bytesCopy = bytes;
+      Memory<byte> outArray = new byte[2 * bytes.Length];
+
+      var r = Parallel.For(0, bytes.Length, i =>
+      {
+        byte b = bytesCopy.Span[i];
+        b.TryFormat(outArray.Span[(2 * i)..(2*i + 2)], out _, format, formatProvider);
+      });
+
+      return Encoding.UTF8.GetString(outArray.Span);
+    }
+  }
+
   protected ValueTask WriteRegister(Ch432tRegisterDefinition register, byte data, bool isAsync = true, CancellationToken cancellationToken = default)
     => WriteRegister(register, new[] { data }, isAsync, cancellationToken);
   protected async ValueTask WriteRegister(Ch432tRegisterDefinition register, ReadOnlyMemory<byte> data, bool isAsync = true, CancellationToken cancellationToken = default)
@@ -502,8 +523,8 @@ public class ModbusRtuDfrobotCh432tSpiPort(
     regAddrWriteRequest <<= CH432T_REG_SHIFT;
     regAddrWriteRequest |= 0x02;
 
-    logger.LogInformation("[WriteRegister()] portnum = {portNum}, reg = {reg}, reg_addr = {regAddr}, data = {data:x}",
-      PortNumber, register, regAddrWriteRequest, data.Span[0]);
+    logger.LogInformation("[WriteRegister()] portnum = {portNum}, reg = 0x{reg:x}, reg_addr = 0x{regAddr:x}, data = 0x{data:x}",
+      PortNumber, register, regAddrWriteRequest, new ByteArrayWrapper(data));
 
     byte[] toWrite = [regAddrWriteRequest, ..data.Span];
     // ReSharper disable once MethodHasAsyncOverloadWithCancellatio

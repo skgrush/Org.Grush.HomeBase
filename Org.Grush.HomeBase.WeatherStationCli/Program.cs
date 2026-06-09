@@ -102,31 +102,41 @@ async Task<int> Run(ParseResult parseResult)
   //   }
   // }
 
+  int busId = parseResult.GetRequiredValue(busIdOption);
+  int chipSelectLine = parseResult.GetValue(chipSelectLineOption) ?? -1;
+  SpiMode? spiMode = parseResult.GetValue(spiModeOption);
+  int baudRate = parseResult.GetValue(baudRateOption);
+  byte? loopTimeout =
+      parseResult.GetResult(loopOption) is null
+        ? null
+        : (parseResult.GetValue(loopOption) ?? 5)
+    ;
+
   using LibGpiodV2Driver driver = new(4);
   using GpioController controller = new(driver);
 
   SimpleConsoleLogger logger = new("Program");
 
   SpiConnectionSettings spiConnectionSettings = new(
-    busId: parseResult.GetRequiredValue(busIdOption),
-    chipSelectLine: parseResult.GetValue(chipSelectLineOption) ?? -1
+    busId: busId,
+    chipSelectLine: chipSelectLine
   )
   {
     ClockFrequency = 1_000_000,
     DataBitLength = 8,
   };
-  if (parseResult.GetValue(spiModeOption) is SpiMode mode)
-    spiConnectionSettings.Mode = mode;
+  if (spiMode is not null)
+    spiConnectionSettings.Mode = spiMode.Value;
 
   CancellationTokenSource cts = new();
 
   using ModbusRtuDfrobotCh432tSpiPort rtuSpiPort = new(
     spiConnectionSettings,
-    Ch432tPortNumber.Port2,
+    Ch432tPortNumber.Port1,
     logger,
     stopBits: StopBits.One,
     parity: Parity.None,
-    baudRate: parseResult.GetValue(baudRateOption)
+    baudRate: baudRate
   );
   logger.LogInformation("Opening rtuSpiPort");
   await rtuSpiPort.Open(cancellationToken: cts.Token);
@@ -134,15 +144,8 @@ async Task<int> Run(ParseResult parseResult)
 
   await using WeatherStationClient client = new(
     rtuSpiPort,
-    1,
-    parseResult.GetValue(baudRateOption)
+    1
   );
-
-  byte? loopTimeout =
-      parseResult.GetResult(loopOption) is null
-        ? null
-        : (parseResult.GetValue(loopOption) ?? 5)
-    ;
 
   Console.CancelKeyPress += (x, y) =>
   {

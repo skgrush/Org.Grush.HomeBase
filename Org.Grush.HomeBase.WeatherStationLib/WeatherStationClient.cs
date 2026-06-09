@@ -71,40 +71,12 @@ public sealed class WeatherStationClient : IAsyncDisposable
 
   public WeatherStationClient(
     IModbusRtuSerialPort modbusPort,
-    byte modbusUnitIdentifier,
-    int? baudRate
-  ) : this((modbusPort, null), modbusUnitIdentifier, baudRate)
-  { }
-  public WeatherStationClient(
-    string portName,
-    byte modbusUnitIdentifier,
-    int? baudRate
-  ) : this((null, portName), modbusUnitIdentifier, baudRate)
-  { }
-
-  public WeatherStationClient(
-    (IModbusRtuSerialPort? modbusPort, string? portName) portOptions,
-    byte modbusUnitIdentifier,
-    int? baudRate
+    byte modbusUnitIdentifier
   )
   {
     _modbusUnitIdentifier = modbusUnitIdentifier;
 
-    if (baudRate is not null && !SupportedBauds.ContainsValue(baudRate.Value))
-      throw new ArgumentOutOfRangeException(nameof(baudRate), baudRate, $"baudRate must be one of {string.Join(',', SupportedBauds)}");
-
-    rtuClient.BaudRate = baudRate ?? DefaultBaud;
-    switch (portOptions)
-    {
-      case ({} modbusPort, _):
-        rtuClient.Initialize(modbusPort, ModbusEndianness.BigEndian);
-        break;
-      case (_, {} portName):
-        rtuClient.Connect(portName, ModbusEndianness.BigEndian);
-        break;
-      default:
-        throw new ArgumentException("WeatherStationClient ctor invalid portOptions");
-    }
+    rtuClient.Initialize(modbusPort, ModbusEndianness.BigEndian);
   }
 
   public bool Cancelled { get; private set; }
