@@ -123,13 +123,13 @@ async Task<int> Run(ParseResult parseResult)
   using GpioController controller = new(driver);
 
   SpiConnectionSettings spiConnectionSettings = new(
-    busId: busId//,
+    busId: busId //,
     // chipSelectLine: chipSelectLine
-  )
-  {
-    ClockFrequency = 1_000_000,
-    DataBitLength = 8,
-  };
+  );
+  // {
+  //   ClockFrequency = 1_000_000,
+  //   DataBitLength = 8,
+  // };
   if (spiMode is not null)
     spiConnectionSettings.Mode = spiMode.Value;
 
