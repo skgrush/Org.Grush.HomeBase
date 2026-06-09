@@ -3,15 +3,20 @@ using System.Device.Spi;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentModbus;
+using Microsoft.Extensions.Logging;
 
 namespace Org.Grush.Port.DFRobot.CH432T;
 
-public class ModbusRtuSpiPort(SpiConnectionSettings spiConnectionSettings) : IModbusRtuSerialPort, IDisposable
+public class ModbusRtuSpiPort(
+  SpiConnectionSettings spiConnectionSettings,
+  ILogger loggerArg
+) : IModbusRtuSerialPort, IDisposable
 {
   private bool _disposed;
   public bool? IsOpen { get; private set; }
   bool IModbusRtuSerialPort.IsOpen => IsOpen is true;
 
+  protected ILogger Logger => loggerArg;
   protected SpiConnectionSettings SpiConnectionSettings => spiConnectionSettings;
 
   private readonly SpiDevice _spiDevice = SpiDevice.Create(spiConnectionSettings);
@@ -33,7 +38,9 @@ public class ModbusRtuSpiPort(SpiConnectionSettings spiConnectionSettings) : IMo
   {
     ObjectDisposedException.ThrowIf(_disposed, this);
 
+    Logger.LogTrace("[base.Read()] pre: size={len}",  buffer.Length);
     _spiDevice.Read(buffer.Span);
+    Logger.LogTrace("[base.Read()] post");
     return buffer.Length;
   }
 
@@ -51,7 +58,9 @@ public class ModbusRtuSpiPort(SpiConnectionSettings spiConnectionSettings) : IMo
   {
     ObjectDisposedException.ThrowIf(_disposed, this);
 
+    Logger.LogTrace("[base.Write()] pre: size={len}",  buffer.Length);
     _spiDevice.Write(buffer.Span);
+    Logger.LogTrace("[base.Write()] post");
   }
 
   public Task WriteAsync(byte[] buffer, int offset = 0, int count = -1, CancellationToken token = default)
