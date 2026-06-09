@@ -202,6 +202,8 @@ public class ModbusRtuDfrobotCh432tSpiPort(
       return;
     }
 
+    logger.LogInformation("[Open()] opening isAsync={isAsync}", isAsync);
+
     byte iir = await ReadRegister(Ch432tRegisterDefinition.IIR, isAsync, cancellationToken);
     logger.LogInformation("[Open()] CH432T_IIR_REG = {iir:x} = {v}", iir, (Ch432tIirValue)iir);
     LSRRegister lsr = new();
@@ -230,7 +232,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
 
   public override void Close()
   {
-    SetLowPowerMode(CH432T_LOW_POWER_MODE);
+    SetLowPowerMode(CH432T_LOW_POWER_MODE, isAsync: false).GetAwaiter().GetResult();
     base.Close();
   }
 
