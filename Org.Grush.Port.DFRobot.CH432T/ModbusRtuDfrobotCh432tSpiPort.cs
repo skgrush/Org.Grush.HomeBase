@@ -484,11 +484,12 @@ public class ModbusRtuDfrobotCh432tSpiPort(
 
     regAddrReadRequest <<= CH432T_REG_SHIFT;  // e.g. 0b0011_1100
 
-    logger.LogInformation("[ReadRegister()] portnum = {portNum}, reg = 0x{reg:x}, reg_addr = 0x{regAddr:x}",
+    logger.LogInformation("[ReadRegister()] portnum = {portNum}, reg = {reg}, reg_addr = 0x{regAddr:x}",
       PortNumber, register, regAddrReadRequest);
 
     byte[] transferBytes = [regAddrReadRequest, 0xFF];
     TransferFullDuplex(transferBytes);
+    logger.LogInformation("[ReadRegister()] transferBytes = [0x{first:x}, 0x{second:x}]", transferBytes[0],  transferBytes[1]);
 
     await Sleeper(TimeSpan.FromMilliseconds(0.1), isAsync, token);
 
