@@ -19,7 +19,16 @@ public class ModbusRtuSpiPort(
   protected ILogger Logger => loggerArg;
   protected SpiConnectionSettings SpiConnectionSettings => spiConnectionSettings;
 
-  private readonly SpiDevice _spiDevice = SpiDevice.Create(spiConnectionSettings);
+  private readonly SpiDevice _spiDevice = CreateSpiDevice(spiConnectionSettings);
+
+  private static SpiDevice CreateSpiDevice(SpiConnectionSettings spiConnectionSettings)
+  {
+    var spi = SpiDevice.Create(spiConnectionSettings);
+    spi.WriteByte(0x42);
+    var incoming = spi.ReadByte();
+    Console.WriteLine("Test write: {0}", incoming);
+    return spi;
+  }
 
   protected void TransferFullDuplex(ReadOnlySpan<byte> writeBuffer, Span<byte> readBuffer)
   {
