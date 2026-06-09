@@ -103,7 +103,7 @@ async Task<int> Run(ParseResult parseResult)
   // }
 
 
-  SimpleConsoleLogger logger = new("Program");
+  SimpleConsoleLogger logger = new("Program", LogLevel.Trace);
 
   int busId = parseResult.GetRequiredValue(busIdOption);
   int chipSelectLine = parseResult.GetValue(chipSelectLineOption) ?? -1;
