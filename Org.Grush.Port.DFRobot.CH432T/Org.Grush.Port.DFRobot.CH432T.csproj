@@ -4,6 +4,9 @@
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>14</LangVersion>
         <Nullable>enable</Nullable>
+      <PublishAot>true</PublishAot>
+      <IsAotCompatible>true</IsAotCompatible>
+      <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
     </PropertyGroup>
 
     <ItemGroup>

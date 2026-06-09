@@ -188,7 +188,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
   public ValueTask GetIntStatus(IntStatusReg reg, bool isAsync, CancellationToken cancellationToken)
     => ReadRegister(Ch432tRegisterDefinition.IIR, reg, isAsync, cancellationToken);
 
-  public ValueTask GetLinesStatus(LinesStatusReg reg, bool isAsync, CancellationToken cancellationToken)
+  public ValueTask GetLinesStatus(LSRRegister reg, bool isAsync, CancellationToken cancellationToken)
     => ReadRegister(Ch432tRegisterDefinition.LSR, reg, isAsync, cancellationToken);
 
   public ValueTask GetModemStatus(ModemConfigReg reg, bool isAsync, CancellationToken cancellationToken)
@@ -197,18 +197,22 @@ public class ModbusRtuDfrobotCh432tSpiPort(
   public override async ValueTask Open(bool isAsync = true, CancellationToken cancellationToken = default)
   {
     if (IsOpen is true)
+    {
+      logger.LogInformation("[Open()] already open");
       return;
+    }
 
     byte iir = await ReadRegister(Ch432tRegisterDefinition.IIR, isAsync, cancellationToken);
-    logger.LogInformation("[Open()] CH432T_IIR_REG = {iir:x}", iir);
-    byte lsr = await ReadRegister(Ch432tRegisterDefinition.LSR, isAsync, cancellationToken);
+    logger.LogInformation("[Open()] CH432T_IIR_REG = {iir:x} = {v}", iir, (Ch432tIirValue)iir);
+    LSRRegister lsr = new();
+    await GetLinesStatus(lsr, isAsync, cancellationToken);
     logger.LogInformation("[Open()] CH432T_LSR_REG = {lsr:x}", lsr);
 
     await WriteRegister(Ch432tRegisterDefinition.SCR, 0x66, isAsync, cancellationToken);
     byte scr = await ReadRegister(Ch432tRegisterDefinition.SCR,  isAsync, cancellationToken);
     if (scr is not 0x66)
     {
-      throw new InvalidOperationException("Failed to open port! Check whether the expansion board is properly connected and whether spidev0.0 is occupied.");
+      throw new InvalidOperationException($"Failed to open port! (Expected 0x66 but got 0x{scr:x}) Check whether the expansion board is properly connected and whether spidev0.0 is occupied.");
     }
 
     try
@@ -320,7 +324,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
   protected async Task PortIrq(Memory<byte> buff, bool isAsync, CancellationToken cancellationToken)
   {
     IntStatusReg intStatus = new();
-    LinesStatusReg linesStatus = new();
+    LSRRegister linesStatus = new();
 
     while (true)
     {
@@ -445,7 +449,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
   {
     int idx = 0;
 
-    LinesStatusReg linesStatus = new();
+    LSRRegister linesStatus = new();
 
     while (true)
     {
@@ -479,6 +483,9 @@ public class ModbusRtuDfrobotCh432tSpiPort(
       regAddrReadRequest &= 0x08;             // e.g. 0b1111 scratchPad on Port 2
 
     regAddrReadRequest <<= CH432T_REG_SHIFT;  // e.g. 0b0011_1100
+
+    logger.LogInformation("[ReadRegister()] portnum = {portNum}, reg = 0x{reg:x}, reg_addr = 0x{regAddr:x}",
+      PortNumber, register, regAddrReadRequest);
 
     byte[] transferBytes = [regAddrReadRequest, 0xFF];
     TransferFullDuplex(transferBytes);
@@ -546,7 +553,7 @@ public class ModbusRtuDfrobotCh432tSpiPort(
   }
 
   protected ValueTask WriteRegister(Ch432tRegisterDefinition register, ByteStructure data, bool isAsync = true, CancellationToken cancellationToken = default)
-    => WriteRegister(register, data.Read(),  isAsync, cancellationToken);
+    => WriteRegister(register, data.Value,  isAsync, cancellationToken);
 
   protected async ValueTask RegBitUpdate(Ch432tRegisterDefinition register, byte mask, byte value, bool isAsync = true, CancellationToken cancellationToken = default)
   {

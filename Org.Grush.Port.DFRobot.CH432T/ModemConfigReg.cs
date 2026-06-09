@@ -1,3 +1,6 @@
+using System;
+using System.Text.Json;
+
 namespace Org.Grush.Port.DFRobot.CH432T;
 
 /// <remarks>
@@ -53,4 +56,7 @@ public class ModemConfigReg(byte initial = 0b0) : ByteStructure(initial)
     get => ReadBitFromMask(0b0000_0001);
     set => WriteBitFromMask(value, 0b0000_0001);
   }
+
+  public override string ToString(string? format, IFormatProvider? formatProvider)
+    => JsonSerializer.Serialize(this, Ch432tSerializerContext.Default.ModemConfigReg);
 }

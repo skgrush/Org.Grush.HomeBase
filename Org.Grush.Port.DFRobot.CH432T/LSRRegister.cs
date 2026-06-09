@@ -1,3 +1,6 @@
+using System;
+using System.Text.Json;
+
 namespace Org.Grush.Port.DFRobot.CH432T;
 
 /// <summary>
@@ -20,7 +23,7 @@ namespace Org.Grush.Port.DFRobot.CH432T;
 ///       fifo_over: set to 1, indicates the received FIFO buffer overflow
 ///       data_ready: set to 1, indicates there is data received from the FIFO, after reading all the data in FIFO, the bit will automatically reset.
 /// </remarks>
-public class LinesStatusReg(byte initial = 0b0110_0000) : ByteStructure(initial)
+public class LSRRegister(byte initial = 0b0110_0000) : ByteStructure(initial)
 {
   public bool RFifoErr
   {
@@ -69,4 +72,7 @@ public class LinesStatusReg(byte initial = 0b0110_0000) : ByteStructure(initial)
     get => ReadBitFromMask(0b0000_0001);
     set => WriteBitFromMask(value, 0b0000_0001);
   }
+
+  public override string ToString(string? format, IFormatProvider? formatProvider)
+    => JsonSerializer.Serialize(this, Ch432tSerializerContext.Default.LSRRegister);
 }

@@ -102,6 +102,9 @@ async Task<int> Run(ParseResult parseResult)
   //   }
   // }
 
+
+  SimpleConsoleLogger logger = new("Program");
+
   int busId = parseResult.GetRequiredValue(busIdOption);
   int chipSelectLine = parseResult.GetValue(chipSelectLineOption) ?? -1;
   SpiMode? spiMode = parseResult.GetValue(spiModeOption);
@@ -112,10 +115,12 @@ async Task<int> Run(ParseResult parseResult)
         : (parseResult.GetValue(loopOption) ?? 5)
     ;
 
+  logger.LogDebug("busId={busId}  chipSelectLine={chipSelectLine}  spiMode={spiMode}  baudRate={baudRate}  loopTimeout={loopTimeout}",
+    busId, chipSelectLine, spiMode, baudRate, loopTimeout
+  );
+
   using LibGpiodV2Driver driver = new(4);
   using GpioController controller = new(driver);
-
-  SimpleConsoleLogger logger = new("Program");
 
   SpiConnectionSettings spiConnectionSettings = new(
     busId: busId,

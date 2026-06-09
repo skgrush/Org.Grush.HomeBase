@@ -1,4 +1,6 @@
+using System;
 using System.ComponentModel;
+using System.Text.Json;
 
 namespace Org.Grush.Port.DFRobot.CH432T;
 
@@ -33,7 +35,7 @@ public class IntStatusReg(byte initial = 0b0000_0001) : ByteStructure(initial)
     set => WriteBitFromMask(value, 0b1000_0000);
   }
 
-  public byte IntType => (byte)(Read() & 0x0000_1111);
+  public byte IntType => (byte)(Value & 0x0000_1111);
 
   public byte? Priority
   {
@@ -71,4 +73,7 @@ public class IntStatusReg(byte initial = 0b0000_0001) : ByteStructure(initial)
       Write(newValue);
     }
   }
+
+  public override string ToString(string? format, IFormatProvider? formatProvider)
+    => JsonSerializer.Serialize(this, Ch432tSerializerContext.Default.IntStatusReg);
 }
