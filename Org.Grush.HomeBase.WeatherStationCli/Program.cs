@@ -108,8 +108,12 @@ async Task<int> Run(ParseResult parseResult)
   //   }
   // }
 
+  TextWriter stdout = Console.Out;
+  Console.SetOut(Console.Error);
 
-  SimpleConsoleLogger logger = new("Program", LogLevel.Trace);
+  using SimpleConsoleLoggerFactory loggerFactory = new(LogLevel.Trace);
+
+  var programLogger = loggerFactory.CreateLogger<Program>();
 
   string? device = parseResult.GetValue(deviceOption);
   int? busId = parseResult.GetValue(busIdOption);
@@ -122,7 +126,7 @@ async Task<int> Run(ParseResult parseResult)
         : (parseResult.GetValue(loopOption) ?? 5)
     ;
 
-  logger.LogDebug("device={device}  busId={busId}  chipSelectLine={chipSelectLine}  spiMode={spiMode}  baudRate={baudRate}  loopTimeout={loopTimeout}",
+  programLogger.LogDebug("device={device}  busId={busId}  chipSelectLine={chipSelectLine}  spiMode={spiMode}  baudRate={baudRate}  loopTimeout={loopTimeout}",
     device, busId, chipSelectLine, spiMode, baudRate, loopTimeout
   );
 
@@ -131,7 +135,7 @@ async Task<int> Run(ParseResult parseResult)
 
   using GpioController controller = new();
 
-  logger.LogDebug(
+  programLogger.LogDebug(
     "GPIO Controller ({type}) pinCount={pinCount}",
     controller.GetType().Name,
     controller.PinCount
@@ -179,7 +183,7 @@ async Task<int> Run(ParseResult parseResult)
       Mode = spiMode ?? default,
     };
 
-    ModbusRtuSpiPort rtuSpiPort = new(spiConnectionSettings, logger);
+    ModbusRtuSpiPort rtuSpiPort = new(spiConnectionSettings, loggerFactory.CreateLogger<ModbusRtuSpiPort>());
     modbusPort = rtuSpiPort;
     disposable = rtuSpiPort;
   }
@@ -195,12 +199,12 @@ async Task<int> Run(ParseResult parseResult)
   await using WeatherStationClient client = new(
     modbusPort,
     1,
-    logger
+    loggerFactory.CreateLogger<WeatherStationClient>()
   );
 
   Console.CancelKeyPress += (x, y) =>
   {
-    logger.LogInformation("<CancelKeyPress>");
+    programLogger.LogInformation("<CancelKeyPress>");
     // cancel the cancelling, then cancel the cancellation (token)
     y.Cancel = true;
     cts.Cancel();
@@ -208,7 +212,7 @@ async Task<int> Run(ParseResult parseResult)
 
   try
   {
-    Console.WriteLine("{\n");
+    stdout.WriteLine("{\n");
     while (!cts.Token.IsCancellationRequested && !client.Cancelled)
     {
       // var results = await client.ReadAllDataAsync();
@@ -218,7 +222,7 @@ async Task<int> Run(ParseResult parseResult)
       //   JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.AllData)
       // );
       var results = await client.ReadWindSpeedAndDirectionAsync(cts.Token);
-      Console.WriteLine(
+      stdout.WriteLine(
         "\"{0}\": {1},\n",
         DateTimeOffset.Now,
         JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.WindSpeedAndDirection)
@@ -233,7 +237,7 @@ async Task<int> Run(ParseResult parseResult)
   {
   }
 
-  Console.WriteLine("}");
+  stdout.WriteLine("}");
 
   return 0;
 }

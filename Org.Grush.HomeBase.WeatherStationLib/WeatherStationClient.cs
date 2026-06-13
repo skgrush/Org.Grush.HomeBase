@@ -56,7 +56,7 @@ public sealed class WeatherStationClient : IAsyncDisposable
     Handshake = Handshake.None,
   };
   private readonly byte _modbusUnitIdentifier;
-  private readonly ILogger _logger;
+  private readonly ILogger<WeatherStationClient> _logger;
 
   public const int DefaultBaud = 4800;
   public static readonly ImmutableDictionary<byte, int> SupportedBauds =
@@ -74,7 +74,7 @@ public sealed class WeatherStationClient : IAsyncDisposable
   public WeatherStationClient(
     IModbusRtuSerialPort modbusPort,
     byte modbusUnitIdentifier,
-    ILogger logger
+    ILogger<WeatherStationClient> logger
   )
   {
     _modbusUnitIdentifier = modbusUnitIdentifier;
