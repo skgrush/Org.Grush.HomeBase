@@ -52,6 +52,7 @@ RootCommand command = new("HomeBase WeatherStationCli")
   chipSelectLineOption,
   baudRateOption,
   spiModeOption,
+  loopOption,
   helpOption,
 };
 command.SetAction(Run);
@@ -151,7 +152,8 @@ async Task<int> Run(ParseResult parseResult)
 
   await using WeatherStationClient client = new(
     rtuSpiPort,
-    1
+    1,
+    logger
   );
 
   Console.CancelKeyPress += (x, y) =>

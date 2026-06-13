@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
 using FluentModbus;
+using Microsoft.Extensions.Logging;
 
 namespace Org.Grush.HomeBase.WeatherStationLib;
 
@@ -55,6 +56,7 @@ public sealed class WeatherStationClient : IAsyncDisposable
     Handshake = Handshake.None,
   };
   private readonly byte _modbusUnitIdentifier;
+  private readonly ILogger _logger;
 
   public const int DefaultBaud = 4800;
   public static readonly ImmutableDictionary<byte, int> SupportedBauds =
@@ -71,10 +73,12 @@ public sealed class WeatherStationClient : IAsyncDisposable
 
   public WeatherStationClient(
     IModbusRtuSerialPort modbusPort,
-    byte modbusUnitIdentifier
+    byte modbusUnitIdentifier,
+    ILogger logger
   )
   {
     _modbusUnitIdentifier = modbusUnitIdentifier;
+    _logger = logger;
 
     rtuClient.Initialize(modbusPort, ModbusEndianness.BigEndian);
   }
@@ -109,7 +113,10 @@ public sealed class WeatherStationClient : IAsyncDisposable
 
   public async Task<WindSpeedAndDirection> ReadWindSpeedAndDirectionAsync(CancellationToken cancellationToken)
   {
+
     var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
+    _logger.LogTrace("[ReadWindSpeedAndDirectionAsync()] pre");
 
     var result = await rtuClient.ReadHoldingRegistersAsync<ushort>(
       unitIdentifier: _modbusUnitIdentifier,
@@ -117,6 +124,8 @@ public sealed class WeatherStationClient : IAsyncDisposable
       count: 4,
       cancellationToken: ct
     );
+
+    _logger.LogTrace("[ReadWindSpeedAndDirectionAsync()] post");
 
     return new(
       WindSpeed: result.Span[0] / 100.0d,
