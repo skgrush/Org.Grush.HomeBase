@@ -135,17 +135,19 @@ async Task<int> Run(ParseResult parseResult)
 
   CancellationTokenSource cts = new();
 
-  using ModbusRtuDfrobotCh432tSpiPort rtuSpiPort = new(
-    spiConnectionSettings,
-    Ch432tPortNumber.Port1,
-    logger,
-    stopBits: StopBits.One,
-    parity: Parity.None,
-    baudRate: baudRate
-  );
-  logger.LogInformation("Opening rtuSpiPort");
-  await rtuSpiPort.Open(cancellationToken: cts.Token);
-  logger.LogInformation("Opened rtuSpiPort");
+  // using ModbusRtuDfrobotCh432tSpiPort rtuSpiPort = new(
+  //   spiConnectionSettings,
+  //   Ch432tPortNumber.Port1,
+  //   logger,
+  //   stopBits: StopBits.One,
+  //   parity: Parity.None,
+  //   baudRate: baudRate
+  // );
+  // logger.LogInformation("Opening rtuSpiPort");
+  // await rtuSpiPort.Open(cancellationToken: cts.Token);
+  // logger.LogInformation("Opened rtuSpiPort");
+
+  using ModbusRtuSpiPort rtuSpiPort = new(spiConnectionSettings, logger);
 
   await using WeatherStationClient client = new(
     rtuSpiPort,
