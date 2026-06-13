@@ -123,8 +123,8 @@ async Task<int> Run(ParseResult parseResult)
   using GpioController controller = new(driver);
 
   SpiConnectionSettings spiConnectionSettings = new(
-    busId: busId //,
-    // chipSelectLine: chipSelectLine
+    busId: busId,
+    chipSelectLine: chipSelectLine
   );
   // {
   //   ClockFrequency = 1_000_000,
