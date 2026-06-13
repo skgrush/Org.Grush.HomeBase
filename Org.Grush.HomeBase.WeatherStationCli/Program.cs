@@ -3,20 +3,19 @@
 using System.CommandLine;
 using System.CommandLine.Help;
 using System.Device.Gpio;
-using System.Device.Gpio.Drivers;
 using System.Device.Spi;
 using System.IO.Ports;
 using System.Text.Json;
+using FluentModbus;
 using Iot.Device.Common;
 using Microsoft.Extensions.Logging;
 using Org.Grush.HomeBase.WeatherStationLib;
 using Org.Grush.Port.DFRobot.CH432T;
 
-Option<int> busIdOption = new("--bus")
+Option<int?> busIdOption = new("--bus")
 {
   Description = "Specifies the bus identifier, e.g. the X in /dev/spidevX.Y",
   Arity = ArgumentArity.ExactlyOne,
-  Required = true,
 };
 
 Option<int?> chipSelectLineOption = new("--chip-select-line")
@@ -30,6 +29,11 @@ Option<int> baudRateOption = new("--baud")
   DefaultValueFactory = _ => WeatherStationClient.DefaultBaud,
 };
 baudRateOption.AcceptOnlyFromAmong(WeatherStationClient.SupportedBauds.Values.Select(v => v.ToString()).ToArray());
+
+Option<string?> deviceOption = new("--device")
+{
+  Arity = ArgumentArity.ExactlyOne,
+};
 
 Option<byte?> loopOption = new("--loop")
 {
@@ -50,6 +54,7 @@ RootCommand command = new("HomeBase WeatherStationCli")
 {
   busIdOption,
   chipSelectLineOption,
+  deviceOption,
   baudRateOption,
   spiModeOption,
   loopOption,
@@ -106,7 +111,8 @@ async Task<int> Run(ParseResult parseResult)
 
   SimpleConsoleLogger logger = new("Program", LogLevel.Trace);
 
-  int busId = parseResult.GetRequiredValue(busIdOption);
+  string? device = parseResult.GetValue(deviceOption);
+  int? busId = parseResult.GetValue(busIdOption);
   int chipSelectLine = parseResult.GetValue(chipSelectLineOption) ?? -1;
   SpiMode? spiMode = parseResult.GetValue(spiModeOption);
   int baudRate = parseResult.GetValue(baudRateOption);
@@ -116,23 +122,20 @@ async Task<int> Run(ParseResult parseResult)
         : (parseResult.GetValue(loopOption) ?? 5)
     ;
 
-  logger.LogDebug("busId={busId}  chipSelectLine={chipSelectLine}  spiMode={spiMode}  baudRate={baudRate}  loopTimeout={loopTimeout}",
-    busId, chipSelectLine, spiMode, baudRate, loopTimeout
+  logger.LogDebug("device={device}  busId={busId}  chipSelectLine={chipSelectLine}  spiMode={spiMode}  baudRate={baudRate}  loopTimeout={loopTimeout}",
+    device, busId, chipSelectLine, spiMode, baudRate, loopTimeout
   );
 
-  using LibGpiodV2Driver driver = new(4);
-  using GpioController controller = new(driver);
+  // using LibGpiodV2Driver driver = new(4);
+  // using GpioController controller = new(driver);
 
-  SpiConnectionSettings spiConnectionSettings = new(
-    busId: busId,
-    chipSelectLine: chipSelectLine
+  using GpioController controller = new();
+
+  logger.LogDebug(
+    "GPIO Controller ({type}) pinCount={pinCount}",
+    controller.GetType().Name,
+    controller.PinCount
   );
-  // {
-  //   ClockFrequency = 1_000_000,
-  //   DataBitLength = 8,
-  // };
-  if (spiMode is not null)
-    spiConnectionSettings.Mode = spiMode.Value;
 
   CancellationTokenSource cts = new();
 
@@ -148,10 +151,49 @@ async Task<int> Run(ParseResult parseResult)
   // await rtuSpiPort.Open(cancellationToken: cts.Token);
   // logger.LogInformation("Opened rtuSpiPort");
 
-  using ModbusRtuSpiPort rtuSpiPort = new(spiConnectionSettings, logger);
+  IModbusRtuSerialPort modbusPort;
+  IDisposable disposable;
+
+  if (device is not null)
+  {
+    var serialPort = new SerialPort(
+      device,
+      baudRate: baudRate,
+      parity: Parity.None,
+      dataBits: 8,
+      stopBits: StopBits.OnePointFive
+    );
+
+    ModbusRtuSerialPort rtuSerialPort = new(serialPort);
+    modbusPort = rtuSerialPort;
+    disposable = serialPort;
+  }
+  else if (busId is not null)
+  {
+
+    SpiConnectionSettings spiConnectionSettings = new(
+      busId: busId.Value,
+      chipSelectLine: chipSelectLine
+    )
+    {
+      Mode = spiMode ?? default,
+    };
+
+    ModbusRtuSpiPort rtuSpiPort = new(spiConnectionSettings, logger);
+    modbusPort = rtuSpiPort;
+    disposable = rtuSpiPort;
+  }
+  else
+  {
+    throw new InvalidOperationException("No device or busId");
+  }
+
+  using IDisposable? _ = disposable;
+
+  // using ModbusRtuSpiPort rtuSpiPort = new(spiConnectionSettings, logger);
 
   await using WeatherStationClient client = new(
-    rtuSpiPort,
+    modbusPort,
     1,
     logger
   );
