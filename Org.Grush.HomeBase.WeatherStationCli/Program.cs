@@ -215,18 +215,18 @@ async Task<int> Run(ParseResult parseResult)
     stdout.WriteLine("{\n");
     while (!cts.Token.IsCancellationRequested && !client.Cancelled)
     {
-      // var results = await client.ReadAllDataAsync();
-      // Console.WriteLine(
-      //   "\"{0}\": {1},\n",
-      //   DateTimeOffset.Now,
-      //   JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.AllData)
-      // );
-      var results = await client.ReadWindSpeedAndDirectionAsync(cts.Token);
+      var results = await client.ReadAllDataAsync(cts.Token);
       stdout.WriteLine(
         "\"{0}\": {1},\n",
         DateTimeOffset.Now,
-        JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.WindSpeedAndDirection)
+        JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.AllData)
       );
+      // var results = await client.ReadWindSpeedAndDirectionAsync(cts.Token);
+      // stdout.WriteLine(
+      //   "\"{0}\": {1},\n",
+      //   DateTimeOffset.Now,
+      //   JsonSerializer.Serialize(results, WeatherStationLibSerializerContext.Default.WindSpeedAndDirection)
+      // );
 
       if (loopTimeout is null)
         break;
