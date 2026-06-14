@@ -12,10 +12,37 @@ public readonly record struct WindSpeedAndDirection(
   ushort WindDirectionAngle
 );
 
+public enum WindDirection : ushort
+{
+  North = 0,
+  NorthEast = 1,
+  East = 2,
+  SouthEast = 3,
+  South = 4,
+  SouthWest = 5,
+  West = 6,
+  NorthWest = 7,
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="WindSpeed">Meters per second</param>
+/// <param name="_regF5"></param>
+/// <param name="WindDirection">8-gear wind direction</param>
+/// <param name="WindDirectionAngle">360º angle from North</param>
+/// <param name="RelativeHumidity">%RH</param>
+/// <param name="Temperature">ºC</param>
+/// <param name="NoiseDb">dB</param>
+/// <param name="Pm2_5">μg/m³</param>
+/// <param name="Pm10">μg/m³</param>
+/// <param name="AtmosphericPressure">kPa</param>
+/// <param name="Lux">Light level in Lux.</param>
+/// <seealso href="https://wiki.dfrobot.com/sen0658/docs/21684#:~:text=General%20register%20address"/>
 public readonly record struct AllData(
   float WindSpeed,
   ushort _regF5,
-  ushort WindDirection,
+  WindDirection WindDirection,
   ushort WindDirectionAngle,
   float RelativeHumidity,
   float Temperature,
@@ -24,7 +51,11 @@ public readonly record struct AllData(
   ushort Pm10,
   ushort AtmosphericPressure,
   UInt32 Lux
-);
+)
+{
+  public const ushort StartingAddress = 0x01_F0;
+  public const int AddressCount = 16;
+}
 
 
 
@@ -91,15 +122,15 @@ public sealed class WeatherStationClient : IAsyncDisposable
 
     var result = await rtuClient.ReadHoldingRegistersAsync<ushort>(
       unitIdentifier: _modbusUnitIdentifier,
-      startingAddress: 0x01_F0,
-      count: 16,
+      startingAddress: AllData.StartingAddress,
+      count: AllData.AddressCount,
       cancellationToken: ct
     );
 
     return new(
       WindSpeed: result.Span[0x4] / 100.0f,
       _regF5: result.Span[0x5],
-      WindDirection: result.Span[0x6],
+      WindDirection: (WindDirection)result.Span[0x6],
       WindDirectionAngle: result.Span[0x7],
       RelativeHumidity: result.Span[0x8] / 10.0f,
       Temperature: result.Span[0x9] / 10.0f,
@@ -108,29 +139,6 @@ public sealed class WeatherStationClient : IAsyncDisposable
       Pm10: result.Span[0xC],
       AtmosphericPressure: result.Span[0xD],
       Lux: MemoryMarshal.Cast<ushort, UInt32>(result.Span[0xE..])[0]
-    );
-  }
-
-  public async Task<WindSpeedAndDirection> ReadWindSpeedAndDirectionAsync(CancellationToken cancellationToken)
-  {
-
-    var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
-
-    _logger.LogTrace("[ReadWindSpeedAndDirectionAsync()] pre");
-
-    var result = await rtuClient.ReadHoldingRegistersAsync<ushort>(
-      unitIdentifier: _modbusUnitIdentifier,
-      startingAddress: 0x01_F4,
-      count: 4,
-      cancellationToken: ct
-    );
-
-    _logger.LogTrace("[ReadWindSpeedAndDirectionAsync()] post");
-
-    return new(
-      WindSpeed: result.Span[0] / 100.0d,
-      WindDirection: result.Span[2],
-      WindDirectionAngle: result.Span[3]
     );
   }
 

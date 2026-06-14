@@ -14,9 +14,5 @@
       <PackageReference Include="FluentModbus" />
       <PackageReference Include="System.Device.Gpio" />
     </ItemGroup>
-    
-    <ItemGroup>
-<!--      <ClCompile Include="dfrobot-example.cpp" />-->
-    </ItemGroup>
 
 </Project>
