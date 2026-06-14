@@ -49,7 +49,11 @@ public class CliExecutor(
       loggerFactory.CreateLogger<WeatherStationClient>()
     );
 
-    Utf8JsonWriter stdoutWriterUtf8 = new(stdout);
+    Utf8JsonWriter stdoutWriterUtf8 = new(stdout, new()
+    {
+      Indented = true,
+      NewLine = "\n",
+    });
 
     try
     {

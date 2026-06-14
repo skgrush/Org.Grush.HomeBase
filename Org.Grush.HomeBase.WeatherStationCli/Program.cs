@@ -14,14 +14,14 @@ command.Action = new CliExecutor(stdoutStream, loggerFactory);
 
 InvocationConfiguration invocationConfiguration = new();
 
-CancellationTokenSource cts = new();
-Console.CancelKeyPress += (x, y) =>
-{
-  Console.Error.WriteLine("<CancelKeyPress>");
-  // cancel the cancelling, then cancel the cancellation (token)
-  y.Cancel = true;
-  cts.Cancel();
-};
+// CancellationTokenSource cts = new();
+// Console.CancelKeyPress += (x, y) =>
+// {
+//   Console.Error.WriteLine("<CancelKeyPress>");
+//   // cancel the cancelling, then cancel the cancellation (token)
+//   y.Cancel = true;
+//   cts.Cancel();
+// };
 
 Console.Error.WriteLine($"Args: {string.Join(' ', args)}");
 
@@ -29,7 +29,7 @@ ParseResult parseResult = command.Parse(args);
 if (parseResult.GetValue(CliOptionResult.LogLevelOption) is { } logLevel)
   loggerFactory.MinLogLevel = logLevel;
 
-int invoked = await parseResult.InvokeAsync(invocationConfiguration, cts.Token);
+int invoked = await parseResult.InvokeAsync(invocationConfiguration);
 Console.Error.WriteLine($"Invoked: {invoked}");
 
 return invoked;
