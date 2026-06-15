@@ -4,7 +4,7 @@ using System.Device.Spi;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Org.Grush.HomeBase.WeatherStationLib;
+using Org.Grush.HomeBase.WeatherStationLib.SEN0658;
 
 namespace Org.Grush.HomeBase.WeatherStationCli;
 

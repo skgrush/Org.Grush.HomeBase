@@ -4,60 +4,7 @@ using System.Runtime.InteropServices;
 using FluentModbus;
 using Microsoft.Extensions.Logging;
 
-namespace Org.Grush.HomeBase.WeatherStationLib;
-
-public readonly record struct WindSpeedAndDirection(
-  double WindSpeed,
-  ushort WindDirection,
-  ushort WindDirectionAngle
-);
-
-public enum WindDirection : ushort
-{
-  North = 0,
-  NorthEast = 1,
-  East = 2,
-  SouthEast = 3,
-  South = 4,
-  SouthWest = 5,
-  West = 6,
-  NorthWest = 7,
-}
-
-/// <summary>
-///
-/// </summary>
-/// <param name="WindSpeed">Meters per second</param>
-/// <param name="_regF5"></param>
-/// <param name="WindDirection">8-gear wind direction</param>
-/// <param name="WindDirectionAngle">360º angle from North</param>
-/// <param name="RelativeHumidity">%RH</param>
-/// <param name="Temperature">ºC</param>
-/// <param name="NoiseDb">dB</param>
-/// <param name="Pm2_5">μg/m³</param>
-/// <param name="Pm10">μg/m³</param>
-/// <param name="AtmosphericPressure">kPa</param>
-/// <param name="Lux">Light level in Lux.</param>
-/// <seealso href="https://wiki.dfrobot.com/sen0658/docs/21684#:~:text=General%20register%20address"/>
-public readonly record struct AllData(
-  float WindSpeed,
-  ushort _regF5,
-  WindDirection WindDirection,
-  ushort WindDirectionAngle,
-  float RelativeHumidity,
-  float Temperature,
-  float NoiseDb,
-  ushort Pm2_5,
-  ushort Pm10,
-  ushort AtmosphericPressure,
-  UInt32 Lux
-)
-{
-  public const ushort StartingAddress = 0x01_F0;
-  public const int AddressCount = 16;
-}
-
-
+namespace Org.Grush.HomeBase.WeatherStationLib.SEN0658;
 
 /// <summary>
 ///
@@ -114,16 +61,16 @@ public sealed class WeatherStationClient : IAsyncDisposable
     rtuClient.Initialize(modbusPort, ModbusEndianness.BigEndian);
   }
 
-  public bool Cancelled { get; private set; }
+  public bool Cancelled => cts.IsCancellationRequested;
 
-  public async Task<AllData> ReadAllDataAsync(CancellationToken cancellationToken)
+  public async Task<SEN0658AllData> ReadAllDataAsync(CancellationToken cancellationToken)
   {
     var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
 
     var result = await rtuClient.ReadHoldingRegistersAsync<ushort>(
       unitIdentifier: _modbusUnitIdentifier,
-      startingAddress: AllData.StartingAddress,
-      count: AllData.AddressCount,
+      startingAddress: SEN0658AllData.StartingAddress,
+      count: SEN0658AllData.AddressCount,
       cancellationToken: ct
     );
 

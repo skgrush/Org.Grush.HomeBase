@@ -5,7 +5,8 @@ using System.IO.Ports;
 using System.Text.Json;
 using FluentModbus;
 using Microsoft.Extensions.Logging;
-using Org.Grush.HomeBase.WeatherStationLib;
+using Org.Grush.HomeBase.APRSWXNET;
+using Org.Grush.HomeBase.WeatherStationLib.SEN0658;
 
 namespace Org.Grush.HomeBase.WeatherStationCli;
 
@@ -62,10 +63,12 @@ public class CliExecutor(
       while (!cancellationToken.IsCancellationRequested && !client.Cancelled)
       {
         var results = await client.ReadAllDataAsync(cancellationToken);
+        var nowStr = DateTimeOffset.Now.ToString("u");
 
-        stdoutWriterUtf8.WritePropertyName(DateTimeOffset.Now.ToString("u"));
-        JsonSerializer.Serialize(writer: stdoutWriterUtf8, value: results, WeatherStationLibSerializerContext.Default.AllData);
+        stdoutWriterUtf8.WritePropertyName(nowStr);
+        JsonSerializer.Serialize(writer: stdoutWriterUtf8, value: results, AprsWxNetSerializerContext.Default.AllData);
         await stdoutWriterUtf8.FlushAsync(cancellationToken);
+        programLogger.LogDebug("Wrote data at ts={ts}", nowStr);
 
         if (result.Loop is null)
           break;

@@ -1,7 +1,7 @@
 using System.Device;
 using System.Text.Json;
 
-namespace Org.Grush.HomeBase.WeatherStationLib;
+namespace Org.Grush.HomeBase.WeatherStationLib.SEN0658;
 
 public static class BoardPrinter
 {
