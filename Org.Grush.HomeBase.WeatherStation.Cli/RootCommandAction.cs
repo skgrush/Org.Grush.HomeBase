@@ -6,8 +6,8 @@ using System.Text.Json;
 using FluentModbus;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Org.Grush.HomeBase.WeatherStation.Data;
 using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
+using AprsWxNetSerializerContext = Org.Grush.HomeBase.WeatherStation.Data.APRSWXNET.AprsWxNetSerializerContext;
 
 namespace Org.Grush.HomeBase.WeatherStation.Cli;
 

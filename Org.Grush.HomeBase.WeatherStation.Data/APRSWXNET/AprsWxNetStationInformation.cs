@@ -1,4 +1,4 @@
-namespace Org.Grush.HomeBase.WeatherStation.Data;
+namespace Org.Grush.HomeBase.WeatherStation.Data.APRSWXNET;
 
 public readonly record struct AprsWxNetStationInformation(
   string CwNumber,

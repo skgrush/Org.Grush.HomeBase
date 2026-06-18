@@ -1,6 +1,6 @@
 using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
-namespace Org.Grush.HomeBase.WeatherStation.Data;
+namespace Org.Grush.HomeBase.WeatherStation.Data.APRSWXNET;
 
 public readonly record struct AprsWxNetPacketBody(
   DateTimeOffset Time,

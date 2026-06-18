@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
-using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
-namespace Org.Grush.HomeBase.WeatherStation.Data;
+namespace Org.Grush.HomeBase.WeatherStation.Data.APRSWXNET;
 
 [JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
 [JsonSerializable(typeof(AprsWxNetStationInformation))]

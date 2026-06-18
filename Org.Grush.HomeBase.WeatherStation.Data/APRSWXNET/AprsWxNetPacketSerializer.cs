@@ -1,5 +1,5 @@
 ﻿
-namespace Org.Grush.HomeBase.WeatherStation.Data;
+namespace Org.Grush.HomeBase.WeatherStation.Data.APRSWXNET;
 
 /// <summary>
 ///
