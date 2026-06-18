@@ -14,7 +14,7 @@ public record StorageDbSettings(
     DirectoryInfo myAppDataDir = localAppDataDir.CreateSubdirectory(appName);
 
     return this with {
-      DbFile = new(Path.Combine(myAppDataDir.FullName, appName)),
+      DbFile = new(Path.Combine(myAppDataDir.FullName, appName + ".sqlite3")),
     };
   }
 }

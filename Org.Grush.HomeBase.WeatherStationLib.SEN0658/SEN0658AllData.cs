@@ -4,6 +4,8 @@ namespace Org.Grush.HomeBase.WeatherStationLib.SEN0658;
 
 /// <summary>
 ///
+/// <b>Size: approx. 32 bytes</b>
+///
 /// </summary>
 /// <param name="WindSpeed">Meters per second</param>
 /// <param name="_regF5"></param>

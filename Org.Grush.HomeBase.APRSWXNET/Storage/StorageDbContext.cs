@@ -4,7 +4,7 @@ using Org.Grush.HomeBase.APRSWXNET.Storage.Entities;
 
 namespace Org.Grush.HomeBase.APRSWXNET.Storage;
 
-public class StorageDbContext(StorageDbSettings settings) : DbContext
+internal class StorageDbContext(StorageDbSettings settings) : DbContext
 {
   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
   {

@@ -6,7 +6,7 @@ namespace Org.Grush.HomeBase.APRSWXNET;
 /// </summary>
 /// <seealso href="https://pond1.gladstonefamily.net/aprswxnet.html"/>
 /// <seealso href="http://wxqa.com/faq.html"/>
-public class Converter(
+public class AprsWxNetPacketSerializer(
   AprsWxNetStationInformation stationInformation
 )
 {
@@ -36,7 +36,7 @@ public class Converter(
 
   public ReadOnlyMemory<char> LatLonChars { get; } = LatLonString(stationInformation.Latitude, stationInformation.Longitude);
 
-  public void Convert(
+  public void Serialize(
     Span<char> buffer82char,
     AprsWxNetPacketBody body
   )
