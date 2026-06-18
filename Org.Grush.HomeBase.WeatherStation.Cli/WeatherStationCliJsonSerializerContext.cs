@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Org.Grush.HomeBase.WeatherStationCli;
+namespace Org.Grush.HomeBase.WeatherStation.Cli;
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(CliOptionResult))]

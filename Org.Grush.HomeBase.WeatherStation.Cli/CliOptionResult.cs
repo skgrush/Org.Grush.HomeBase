@@ -4,9 +4,9 @@ using System.Device.Spi;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Org.Grush.HomeBase.WeatherStationLib.SEN0658;
+using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
-namespace Org.Grush.HomeBase.WeatherStationCli;
+namespace Org.Grush.HomeBase.WeatherStation.Cli;
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicFields)]
 public record CliOptionResult(

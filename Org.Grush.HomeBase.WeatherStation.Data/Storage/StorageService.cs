@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Org.Grush.HomeBase.APRSWXNET.Storage.Entities;
+using Org.Grush.HomeBase.WeatherStation.Data.Storage.Entities;
 
-namespace Org.Grush.HomeBase.APRSWXNET.Storage;
+namespace Org.Grush.HomeBase.WeatherStation.Data.Storage;
 
 public class StorageService : IAsyncDisposable
 {

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using FluentModbus;
 using Microsoft.Extensions.Logging;
 
-namespace Org.Grush.HomeBase.WeatherStationLib.SEN0658;
+namespace Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
 /// <summary>
 ///

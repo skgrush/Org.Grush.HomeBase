@@ -4,8 +4,8 @@ using System.CommandLine;
 using Iot.Device.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Org.Grush.HomeBase.APRSWXNET;
-using Org.Grush.HomeBase.WeatherStationCli;
+using Org.Grush.HomeBase.WeatherStation.Data;
+using Org.Grush.HomeBase.WeatherStation.Cli;
 
 Console.SetOut(Console.Error);
 
@@ -18,7 +18,7 @@ services
   .AddSingleton<RootCommandAction>()
   .AddScoped<RootCommandAction.Executor>()
   .AddAprsWxNetServices()
-  .AddStorageDb(o => o.WithDbFile("Org.Grush.HomeBase.WeatherStationCli"))
+  .AddStorageDb(o => o.WithDbFile("Org.Grush.HomeBase.WeatherStation.Cli"))
 ;
 
 await using var serviceProvider = services.BuildServiceProvider();

@@ -1,8 +1,8 @@
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
-using Org.Grush.HomeBase.APRSWXNET.Storage.Entities;
+using Org.Grush.HomeBase.WeatherStation.Data.Storage.Entities;
 
-namespace Org.Grush.HomeBase.APRSWXNET.Storage;
+namespace Org.Grush.HomeBase.WeatherStation.Data.Storage;
 
 internal class StorageDbContext(StorageDbSettings settings) : DbContext
 {

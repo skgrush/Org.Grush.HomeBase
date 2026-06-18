@@ -1,6 +1,6 @@
-using Org.Grush.HomeBase.APRSWXNET.Storage;
+using Org.Grush.HomeBase.WeatherStation.Data.Storage;
 
-namespace Org.Grush.HomeBase.APRSWXNET;
+namespace Org.Grush.HomeBase.WeatherStation.Data;
 
 public class AprsWxNetReporterService(
   StorageService storage

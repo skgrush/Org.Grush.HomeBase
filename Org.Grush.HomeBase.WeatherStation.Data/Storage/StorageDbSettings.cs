@@ -1,4 +1,4 @@
-namespace Org.Grush.HomeBase.APRSWXNET.Storage;
+namespace Org.Grush.HomeBase.WeatherStation.Data.Storage;
 
 public record StorageDbSettings(
   FileInfo? DbFile = null

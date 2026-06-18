@@ -15,7 +15,7 @@
   </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStationLib.SEN0658\Org.Grush.HomeBase.WeatherStationLib.SEN0658.csproj" />
+      <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Lib.SEN0658\Org.Grush.HomeBase.WeatherStation.Lib.SEN0658.csproj" />
     </ItemGroup>
 
     <ItemGroup>

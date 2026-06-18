@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Org.Grush.HomeBase.WeatherStationLib.SEN0658;
+using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
-namespace Org.Grush.HomeBase.APRSWXNET.Storage.Entities;
+namespace Org.Grush.HomeBase.WeatherStation.Data.Storage.Entities;
 
 /// <summary>
 ///

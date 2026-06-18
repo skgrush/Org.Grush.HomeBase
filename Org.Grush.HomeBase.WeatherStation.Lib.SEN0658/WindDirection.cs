@@ -1,4 +1,4 @@
-namespace Org.Grush.HomeBase.WeatherStationLib.SEN0658;
+namespace Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
 public enum WindDirection : ushort
 {
