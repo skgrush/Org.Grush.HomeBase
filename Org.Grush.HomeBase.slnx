@@ -1,6 +1,8 @@
 <Solution>
+  <Project Path="Org.Grush.HomeBase.Lib.Cron/Org.Grush.HomeBase.Lib.Cron.csproj" />
   <Project Path="Org.Grush.HomeBase.WeatherStation.Cli\Org.Grush.HomeBase.WeatherStation.Cli.csproj" />
   <Project Path="Org.Grush.HomeBase.WeatherStation.Data\Org.Grush.HomeBase.WeatherStation.Data.csproj" />
+  <Project Path="Org.Grush.HomeBase.WeatherStation.Lib.SEN0575/Org.Grush.HomeBase.WeatherStation.Lib.SEN0575.csproj" />
   <Project Path="Org.Grush.HomeBase.WeatherStation.Lib.SEN0658\Org.Grush.HomeBase.WeatherStation.Lib.SEN0658.csproj" />
   <Project Path="Org.Grush.Port.DFRobot.CH432T/Org.Grush.Port.DFRobot.CH432T.csproj" />
 </Solution>

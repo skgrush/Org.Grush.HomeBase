@@ -4,6 +4,7 @@ using System.CommandLine;
 using Iot.Device.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Org.Grush.HomeBase.Lib.Cron;
 using Org.Grush.HomeBase.WeatherStation.Data;
 using Org.Grush.HomeBase.WeatherStation.Cli;
 
@@ -13,6 +14,7 @@ ServiceCollection services = [];
 services
   .AddKeyedTransient<Stream>(serviceKey: "stdout", implementationFactory: (_, _) => Console.OpenStandardOutput())
   .AddLogging()
+  .AddSingleton<CronService>()
   .AddSingleton<SimpleConsoleLoggerFactory>()
   .AddSingleton<ILoggerFactory>(sp => sp.GetRequiredService<SimpleConsoleLoggerFactory>())
   .AddSingleton<RootCommandAction>()

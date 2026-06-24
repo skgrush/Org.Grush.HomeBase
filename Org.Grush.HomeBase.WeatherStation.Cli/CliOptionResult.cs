@@ -1,26 +1,33 @@
 using System.CommandLine;
 using System.CommandLine.Help;
+using System.CommandLine.Parsing;
+using System.ComponentModel;
 using System.Device.Spi;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
 namespace Org.Grush.HomeBase.WeatherStation.Cli;
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicFields)]
-public record CliOptionResult(
+public partial record CliOptionResult(
   // int? BusId,
   // int ChipSelectLine,
   int BaudRate,
   string Device,
-  int? Loop,
+  TimeSpan ReportInterval,
+  TimeSpan QueryInterval,
+  Uri CwopUri,
   // SpiMode? SpiMode,
   LogLevel LogLevel
 )
 {
-  public const int MinLoopMs = 100;
-  public const int DefaultLoopMS = 1000;
+  public static readonly TimeSpan DefaultReportInterval = new(hours: 0, minutes: 7, seconds: 53);
+  public static readonly TimeSpan DefaultQueryInterval = new(0, 0, seconds: 2);
+  public static readonly Uri DefaultCwopUri = new("tcp://cwop.aprs.net:14580");
 
   internal static CliOptionResult From(ParseResult parseResult)
     => new(
@@ -28,9 +35,9 @@ public record CliOptionResult(
       // ChipSelectLine: parseResult.GetValue(ChipSelectLineOption) ?? -1,
       BaudRate: parseResult.GetValue(BaudRateOption),
       Device: parseResult.GetRequiredValue(DeviceOption),
-      Loop: parseResult.GetValue(LoopOption) is int loopValue
-        ? (loopValue < MinLoopMs ? null : loopValue)
-        : DefaultLoopMS,
+      ReportInterval: parseResult.GetValue(ReportIntervalOption),
+      QueryInterval: parseResult.GetValue(QueryIntervalOption),
+      CwopUri: parseResult.GetValue(CwopUriOption) ?? DefaultCwopUri,
       // SpiMode: parseResult.GetValue(SpiModeOption),
       LogLevel: parseResult.GetValue(LogLevelOption)
     );
@@ -87,6 +94,26 @@ public record CliOptionResult(
     }
     .AcceptOnlyFromAmong("0", "1", "2", "3");
 
+
+  internal static readonly Option<TimeSpan> ReportIntervalOption = new("--report-interval")
+  {
+    Arity = ArgumentArity.ExactlyOne,
+    CustomParser = TimeSpanCustomParser,
+    DefaultValueFactory = _ => DefaultReportInterval,
+  };
+  internal static readonly Option<TimeSpan> QueryIntervalOption = new("--query-interval")
+  {
+    Arity = ArgumentArity.ExactlyOne,
+    CustomParser = TimeSpanCustomParser,
+    DefaultValueFactory = _ => DefaultQueryInterval,
+  };
+
+  internal static readonly Option<Uri> CwopUriOption = new("--cwop-uri")
+  {
+    Arity = ArgumentArity.ExactlyOne,
+    DefaultValueFactory = _ => DefaultCwopUri,
+  };
+
   internal static readonly HelpOption HelpOption = new();
 
   internal static readonly Option<LogLevel> LogLevelOption = new Option<LogLevel>("--log-level")
@@ -98,4 +125,47 @@ public record CliOptionResult(
       : throw new(),
   }
     .AcceptOnlyFromAmong(Enum.GetValues<LogLevel>().Select(l => l.ToString()).ToArray());
+
+  public static TimeSpan TimeSpanCustomParser(ArgumentResult argResult)
+  {
+    var str = argResult.Tokens[0].Value;
+    if (!str.IsWhiteSpace())
+    {
+      if (TimeSpan.TryParse(str, out var stdSpan))
+        return stdSpan;
+
+      if (TimeSpanRe.Match(str) is { Success: true } match)
+      {
+        return TimeSpanGroupParsers
+          .Select(kvp =>
+            match.Groups[kvp.Key] is { Success: true, ValueSpan: { } vs }
+              ? kvp.Value(double.Parse(vs))
+              : TimeSpan.Zero
+          )
+          .Where(t => t != TimeSpan.Zero)
+          .Aggregate((x, y) => x + y);
+      }
+    }
+
+    argResult.AddError("Invalid TimeSpan, should be a standard TimeSpan format or `[[00hr]00min]00sec`");
+    return TimeSpan.Zero;
+  }
+
+  private static readonly Regex TimeSpanRe = Compile_TimeSpanRe();
+  private static readonly IReadOnlyDictionary<string, Func<double, TimeSpan>> TimeSpanGroupParsers = new Dictionary<string, Func<double, TimeSpan>>
+  {
+    { "second", TimeSpan.FromSeconds },
+    { "minute", TimeSpan.FromMinutes },
+    { "hour",   TimeSpan.FromHours },
+  }.AsReadOnly();
+
+  [GeneratedRegex(
+    """
+    ^\ *
+    (?:(?<hour>   \d+(?:\.\d+)? ) \ *(?:hours?|hrs?|h)  )?\ *
+    (?:(?<minute> \d+(?:\.\d+)? ) \ *(?:minutes?|mins?|m)  )?\ *
+    (?:(?<second> \d+(?:\.\d+)? ) \ *(?:seconds?|secs?|s)  )?\ *
+    $
+    """, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.CultureInvariant)]
+  private static partial Regex Compile_TimeSpanRe();
 }

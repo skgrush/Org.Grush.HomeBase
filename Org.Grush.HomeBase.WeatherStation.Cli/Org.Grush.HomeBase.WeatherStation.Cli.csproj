@@ -20,7 +20,9 @@
     <ItemGroup>
       <ExtraLinkerArg Include="-v" />
       <LinkerArg Include="-v" />
+      <ProjectReference Include="..\Org.Grush.HomeBase.Lib.Cron\Org.Grush.HomeBase.Lib.Cron.csproj" />
       <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Data\Org.Grush.HomeBase.WeatherStation.Data.csproj" />
+      <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Lib.SEN0575\Org.Grush.HomeBase.WeatherStation.Lib.SEN0575.csproj" />
       
       <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Lib.SEN0658\Org.Grush.HomeBase.WeatherStation.Lib.SEN0658.csproj" />
       

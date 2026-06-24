@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
 
 namespace Org.Grush.HomeBase.WeatherStation.Data.APRSWXNET;
@@ -10,4 +11,8 @@ public readonly record struct AprsWxNetPacketBody(
   double? LastHourRainfallMillimeters,
   double? LastDayRainfallMillimeters,
   double? TodayRainfallMillimeters
-);
+)
+{
+  public string Serialize()
+    => JsonSerializer.Serialize(this, AprsWxNetSerializerContext.Default.AprsWxNetPacketBody);
+}

@@ -1,4 +1,6 @@
 ﻿
+using System.Text;
+
 namespace Org.Grush.HomeBase.WeatherStation.Data.APRSWXNET;
 
 /// <summary>
@@ -16,12 +18,12 @@ public class AprsWxNetPacketSerializer(
   public static double CelsiusToFahrenheit(double celsius) => celsius * 9 / 5 + 32;
 
   public static double MillimetersToHundredsInch(double millimeters) => millimeters / 0.254d;
-  public static void FormatMillimetersToHundredsInch(double? maybeMillimeters, Span<char> buffer)
+  public static void FormatMillimetersToHundredsInch(double? maybeMillimeters, Span<byte> buffer)
   {
     if (maybeMillimeters is double millimeters)
       MillimetersToHundredsInch(millimeters).TryFormat(buffer, out var _, new string('0', buffer.Length));
     else
-      buffer.Fill('.');
+      buffer.Fill((byte)'.');
   }
 
   public static double RelativeHumidityRemainder(float relativeHumidity)
@@ -34,20 +36,19 @@ public class AprsWxNetPacketSerializer(
 
   public static double KpaToDecimillibars(double kpa) => kpa * 100;
 
-  public ReadOnlyMemory<char> LatLonChars { get; } = LatLonString(stationInformation.Latitude, stationInformation.Longitude);
+  public ReadOnlyMemory<byte> LatLonBytes { get; } = LatLonString(stationInformation.Latitude, stationInformation.Longitude);
 
   public void Serialize(
-    Span<char> buffer82char,
+    Span<byte> buffer82char,
     AprsWxNetPacketBody body
   )
   {
     // "CW0003>APRS,TCPIP*:/241505z4220.45N/07128.59W_032/005g008t054r001p078P048h50b10245e1w"
-
-    stationInformation.CwNumber.CopyTo(buffer82char[0..6]);
-    ">APRS,TCPIP*:@".CopyTo(buffer82char[6..20]);
+    Encoding.ASCII.GetBytes(stationInformation.CwNumber, buffer82char[0..6]);
+    ">APRS,TCPIP*:@"u8.CopyTo(buffer82char[6..20]);
     body.Time.TryFormat(buffer82char[20..27], out _, "ddhhmm\\z");
 
-    LatLonChars.Span.CopyTo(buffer82char[27..45]);
+    LatLonBytes.Span.CopyTo(buffer82char[27..45]);
 
     ///The underscore "_" followed by 3 numbers represents wind direction in degrees from true north.
     /// This is the direction that the wind is blowing from.
@@ -72,56 +73,56 @@ public class AprsWxNetPacketSerializer(
     ///
 
 
-    buffer82char[45] = '_';
+    buffer82char[45] = (byte)'_';
     body.StationData.WindDirectionAngle.TryFormat(buffer82char[46..49], out _, "000");
 
-    buffer82char[49] = '/';
+    buffer82char[49] = (byte)'/';
     MetersPerSecondToMph(body.AverageWindSpeed ?? body.StationData.WindSpeed).TryFormat(buffer82char[50..53], out _, "000");
 
-    buffer82char[53] = 'g';
+    buffer82char[53] = (byte)'g';
     MetersPerSecondToMph(body.PeakWindGust ?? body.StationData.WindSpeed).TryFormat(buffer82char[54..57], out _, "000");
 
-    buffer82char[57] = 't';
+    buffer82char[57] = (byte)'t';
     CelsiusToFahrenheit(body.StationData.Temperature).TryFormat(buffer82char[58..61], out _, "000");
 
-    buffer82char[61] = 'r';
+    buffer82char[61] = (byte)'r';
     FormatMillimetersToHundredsInch(body.LastHourRainfallMillimeters, buffer82char[62..65]);
 
-    buffer82char[65] = 'p';
+    buffer82char[65] = (byte)'p';
     FormatMillimetersToHundredsInch(body.LastDayRainfallMillimeters, buffer82char[66..69]);
 
-    buffer82char[69] = 'P';
+    buffer82char[69] = (byte)'P';
     FormatMillimetersToHundredsInch(body.TodayRainfallMillimeters, buffer82char[70..73]);
 
-    buffer82char[73] = 'h';
+    buffer82char[73] = (byte)'h';
     RelativeHumidityRemainder(body.StationData.RelativeHumidity).TryFormat(buffer82char[74..76], out _, "00");
 
-    buffer82char[77] = 'b';
+    buffer82char[77] = (byte)'b';
     KpaToDecimillibars(body.StationData.AtmosphericPressure).TryFormat(buffer82char[78..83], out _, "00000");
 
 
   }
 
-  private static ReadOnlyMemory<char> LatLonString(double latitude, double longitude)
+  private static ReadOnlyMemory<byte> LatLonString(double latitude, double longitude)
   {
     // Xddmm.hhN/dddmm.hhW
 
-    Memory<char> characters = new char[19];
-    Span<char> span = characters.Span;
+    Memory<byte> characters = new byte[19];
+    Span<byte> span = characters.Span;
 
     LatLonParts(latitude, characters.Span, out bool latPositive);
-    span[8] = latPositive ? 'N' : 'S';
+    span[8] = (byte)(latPositive ? 'N' : 'S');
 
-    span[9] = '/';
+    span[9] = (byte)'/';
 
     LatLonParts(longitude, characters.Span[10..], out bool lonPositive);
-    span[18] =  lonPositive ? 'E' : 'W';
+    span[18] = (byte)(lonPositive ? 'E' : 'W');
 
     // drop the first latitude char
     return characters[1..];
   }
 
-  public static void LatLonParts(double value, Span<char> span, out bool positive)
+  public static void LatLonParts(double value, Span<byte> span, out bool positive)
   {
     (byte degrees, double minutes, positive) = LatLonParts(value);
 
