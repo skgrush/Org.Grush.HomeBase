@@ -54,51 +54,6 @@ public class RainSenseService(double standardMillimetersPerTip = RainSenseServic
     }
   }
 
-  // public void AddRainInterrupt(int rainfallInMillimeters)
-  // {
-  //   using (_lock.EnterScope())
-  //   {
-  //     if (CurrentEntry is RainfallEntry rainfallEntry)
-  //     {
-  //       CurrentEntry = rainfallEntry with
-  //       {
-  //         RainfallInMillimeters = rainfallEntry.RainfallInMillimeters + rainfallInMillimeters
-  //       };
-  //     }
-  //     else
-  //     {
-  //       CurrentEntry = new RainfallEntry(Start: DateTimeOffset.Now, RainfallInMillimeters: rainfallInMillimeters);
-  //     }
-  //   }
-  // }
-  //
-  // public SavedEntry? SaveRainfall(bool orGetLastSaved)
-  // {
-  //   using (_lock.EnterScope())
-  //   {
-  //     if (CurrentEntry is RainfallEntry rainfallEntry)
-  //     {
-  //       CurrentEntry = new SavedEntry(
-  //         Start: rainfallEntry.Start,
-  //         End: DateTimeOffset.Now,
-  //         RainfallInMillimeters: rainfallEntry.RainfallInMillimeters
-  //       );
-  //     }
-  //     else if (!orGetLastSaved)
-  //       return null;
-  //
-  //     return CurrentEntry as SavedEntry;
-  //   }
-  // }
-
-  // public interface IEntry
-  // {
-  //   DateTimeOffset Start { get; }
-  //   DateTimeOffset? End { get; }
-  //   bool Complete { get; }
-  //   public double RainfallInMillimeters { get; }
-  // };
-
   public sealed record SavedEntry(
     DateTimeOffset Start,
     DateTimeOffset End,
@@ -108,15 +63,6 @@ public class RainSenseService(double standardMillimetersPerTip = RainSenseServic
     //DateTimeOffset? IEntry.End => End;
     public bool Complete => true;
   }
-
-  // public sealed record RainfallEntry(
-  //   DateTimeOffset Start,
-  //   double RainfallInMillimeters
-  // ) : IEntry
-  // {
-  //   public DateTimeOffset? End => null;
-  //   public bool Complete => false;
-  // }
 
   public readonly struct EventSubScope : IAsyncDisposable
   {

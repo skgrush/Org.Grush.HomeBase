@@ -26,11 +26,14 @@
       
       <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Lib.SEN0658\Org.Grush.HomeBase.WeatherStation.Lib.SEN0658.csproj" />
       
+      <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Service\Org.Grush.HomeBase.WeatherStation.Service.csproj" />
+      
 <!--      <ProjectReference Include="..\Org.Grush.Port.DFRobot.CH432T\Org.Grush.Port.DFRobot.CH432T.csproj" />-->
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Iot.Device.Bindings" />
+      <PackageReference Include="JetBrains.Annotations" />
       <PackageReference Include="System.CommandLine" />
     </ItemGroup>
 

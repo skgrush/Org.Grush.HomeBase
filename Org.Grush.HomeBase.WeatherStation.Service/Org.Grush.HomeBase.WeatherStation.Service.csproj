@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>14</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+      <PackageReference Include="JetBrains.Annotations" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Org.Grush.HomeBase.Lib.Cron\Org.Grush.HomeBase.Lib.Cron.csproj" />
+      <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Data\Org.Grush.HomeBase.WeatherStation.Data.csproj" />
+      <ProjectReference Include="..\Org.Grush.HomeBase.WeatherStation.Lib.SEN0575\Org.Grush.HomeBase.WeatherStation.Lib.SEN0575.csproj" />
+    </ItemGroup>
+
+</Project>

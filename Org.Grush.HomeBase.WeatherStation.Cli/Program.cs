@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Org.Grush.HomeBase.Lib.Cron;
 using Org.Grush.HomeBase.WeatherStation.Data;
 using Org.Grush.HomeBase.WeatherStation.Cli;
+using Org.Grush.HomeBase.WeatherStation.Service;
 
 Console.SetOut(Console.Error);
 
@@ -18,7 +19,8 @@ services
   .AddSingleton<SimpleConsoleLoggerFactory>()
   .AddSingleton<ILoggerFactory>(sp => sp.GetRequiredService<SimpleConsoleLoggerFactory>())
   .AddSingleton<RootCommandAction>()
-  .AddScoped<RootCommandAction.Executor>()
+  .AddSingleton<Factory>()
+  .AddScoped<Service>()
   .AddAprsWxNetServices()
   .AddStorageDb(o => o.WithDbFile("Org.Grush.HomeBase.WeatherStation.Cli"))
 ;

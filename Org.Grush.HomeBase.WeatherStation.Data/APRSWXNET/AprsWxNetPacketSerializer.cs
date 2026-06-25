@@ -39,16 +39,16 @@ public class AprsWxNetPacketSerializer(
   public ReadOnlyMemory<byte> LatLonBytes { get; } = LatLonString(stationInformation.Latitude, stationInformation.Longitude);
 
   public void Serialize(
-    Span<byte> buffer82char,
+    Span<byte> buffer82Byte,
     AprsWxNetPacketBody body
   )
   {
     // "CW0003>APRS,TCPIP*:/241505z4220.45N/07128.59W_032/005g008t054r001p078P048h50b10245e1w"
-    Encoding.ASCII.GetBytes(stationInformation.CwNumber, buffer82char[0..6]);
-    ">APRS,TCPIP*:@"u8.CopyTo(buffer82char[6..20]);
-    body.Time.TryFormat(buffer82char[20..27], out _, "ddhhmm\\z");
+    Encoding.ASCII.GetBytes(stationInformation.CwNumber, buffer82Byte[0..6]);
+    ">APRS,TCPIP*:@"u8.CopyTo(buffer82Byte[6..20]);
+    body.Time.TryFormat(buffer82Byte[20..27], out _, "ddhhmm\\z");
 
-    LatLonBytes.Span.CopyTo(buffer82char[27..45]);
+    LatLonBytes.Span.CopyTo(buffer82Byte[27..45]);
 
     ///The underscore "_" followed by 3 numbers represents wind direction in degrees from true north.
     /// This is the direction that the wind is blowing from.
@@ -73,32 +73,32 @@ public class AprsWxNetPacketSerializer(
     ///
 
 
-    buffer82char[45] = (byte)'_';
-    body.StationData.WindDirectionAngle.TryFormat(buffer82char[46..49], out _, "000");
+    buffer82Byte[45] = (byte)'_';
+    body.StationData.WindDirectionAngle.TryFormat(buffer82Byte[46..49], out _, "000");
 
-    buffer82char[49] = (byte)'/';
-    MetersPerSecondToMph(body.AverageWindSpeed ?? body.StationData.WindSpeed).TryFormat(buffer82char[50..53], out _, "000");
+    buffer82Byte[49] = (byte)'/';
+    MetersPerSecondToMph(body.AverageWindSpeed ?? body.StationData.WindSpeed).TryFormat(buffer82Byte[50..53], out _, "000");
 
-    buffer82char[53] = (byte)'g';
-    MetersPerSecondToMph(body.PeakWindGust ?? body.StationData.WindSpeed).TryFormat(buffer82char[54..57], out _, "000");
+    buffer82Byte[53] = (byte)'g';
+    MetersPerSecondToMph(body.PeakWindGust ?? body.StationData.WindSpeed).TryFormat(buffer82Byte[54..57], out _, "000");
 
-    buffer82char[57] = (byte)'t';
-    CelsiusToFahrenheit(body.StationData.Temperature).TryFormat(buffer82char[58..61], out _, "000");
+    buffer82Byte[57] = (byte)'t';
+    CelsiusToFahrenheit(body.StationData.Temperature).TryFormat(buffer82Byte[58..61], out _, "000");
 
-    buffer82char[61] = (byte)'r';
-    FormatMillimetersToHundredsInch(body.LastHourRainfallMillimeters, buffer82char[62..65]);
+    buffer82Byte[61] = (byte)'r';
+    FormatMillimetersToHundredsInch(body.LastHourRainfallMillimeters, buffer82Byte[62..65]);
 
-    buffer82char[65] = (byte)'p';
-    FormatMillimetersToHundredsInch(body.LastDayRainfallMillimeters, buffer82char[66..69]);
+    buffer82Byte[65] = (byte)'p';
+    FormatMillimetersToHundredsInch(body.LastDayRainfallMillimeters, buffer82Byte[66..69]);
 
-    buffer82char[69] = (byte)'P';
-    FormatMillimetersToHundredsInch(body.TodayRainfallMillimeters, buffer82char[70..73]);
+    buffer82Byte[69] = (byte)'P';
+    FormatMillimetersToHundredsInch(body.TodayRainfallMillimeters, buffer82Byte[70..73]);
 
-    buffer82char[73] = (byte)'h';
-    RelativeHumidityRemainder(body.StationData.RelativeHumidity).TryFormat(buffer82char[74..76], out _, "00");
+    buffer82Byte[73] = (byte)'h';
+    RelativeHumidityRemainder(body.StationData.RelativeHumidity).TryFormat(buffer82Byte[74..76], out _, "00");
 
-    buffer82char[77] = (byte)'b';
-    KpaToDecimillibars(body.StationData.AtmosphericPressure).TryFormat(buffer82char[78..83], out _, "00000");
+    buffer82Byte[77] = (byte)'b';
+    KpaToDecimillibars(body.StationData.AtmosphericPressure).TryFormat(buffer82Byte[78..83], out _, "00000");
 
 
   }

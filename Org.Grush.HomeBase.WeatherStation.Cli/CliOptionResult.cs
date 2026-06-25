@@ -1,44 +1,48 @@
 using System.CommandLine;
 using System.CommandLine.Help;
 using System.CommandLine.Parsing;
-using System.ComponentModel;
-using System.Device.Spi;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+using System.IO.Ports;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Org.Grush.HomeBase.WeatherStation.Lib.SEN0658;
+using Org.Grush.HomeBase.WeatherStation.Service;
 
 namespace Org.Grush.HomeBase.WeatherStation.Cli;
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicFields)]
-public partial record CliOptionResult(
-  // int? BusId,
-  // int ChipSelectLine,
+public record CliOptionResult(
   int BaudRate,
+  byte ModbusUnitIdentifier,
   string Device,
+  int? RainPin,
   TimeSpan ReportInterval,
   TimeSpan QueryInterval,
   Uri CwopUri,
-  // SpiMode? SpiMode,
-  LogLevel LogLevel
+  LogLevel LogLevel,
+  bool PrintJson
+) : ServiceOptions(
+  BaudRate: BaudRate,
+  ModbusUnitIdentifier: ModbusUnitIdentifier,
+  Device: Device,
+  RainPin: RainPin,
+  ReportInterval: ReportInterval,
+  QueryInterval: QueryInterval,
+  CwopUri: CwopUri,
+  PrintJson: PrintJson,
+  LogLevel: LogLevel
 )
 {
-  public static readonly TimeSpan DefaultReportInterval = new(hours: 0, minutes: 7, seconds: 53);
-  public static readonly TimeSpan DefaultQueryInterval = new(0, 0, seconds: 2);
-  public static readonly Uri DefaultCwopUri = new("tcp://cwop.aprs.net:14580");
-
   internal static CliOptionResult From(ParseResult parseResult)
     => new(
-      // BusId: parseResult.GetValue(BusIdOption),
-      // ChipSelectLine: parseResult.GetValue(ChipSelectLineOption) ?? -1,
       BaudRate: parseResult.GetValue(BaudRateOption),
+      ModbusUnitIdentifier: parseResult.GetValue(ModbusUnitIdentifierOption),
       Device: parseResult.GetRequiredValue(DeviceOption),
+      RainPin: parseResult.GetValue(RainPinOption),
       ReportInterval: parseResult.GetValue(ReportIntervalOption),
       QueryInterval: parseResult.GetValue(QueryIntervalOption),
       CwopUri: parseResult.GetValue(CwopUriOption) ?? DefaultCwopUri,
-      // SpiMode: parseResult.GetValue(SpiModeOption),
+      PrintJson: parseResult.GetValue(PrintJsonOption),
       LogLevel: parseResult.GetValue(LogLevelOption)
     );
 
@@ -54,46 +58,22 @@ public partial record CliOptionResult(
       toAddTo.Add(option);
   }
 
-  // internal static readonly Option<int?> BusIdOption = new("--bus")
-  // {
-  //   Description = "Specifies the bus identifier, e.g. the X in /dev/spidevX.Y",
-  //   Arity = ArgumentArity.ExactlyOne,
-  // };
-  //
-  // internal static readonly Option<int?> ChipSelectLineOption = new("--chip-select-line")
-  // {
-  //   Description = "Specifies the chip select, e.g. the Y in /dev/spidevX.Y",
-  //   Arity = ArgumentArity.ExactlyOne,
-  // };
-
   internal static readonly Option<int> BaudRateOption = new Option<int>("--baud")
     {
       DefaultValueFactory = _ => WeatherStationClient.DefaultBaud,
     }
     .AcceptOnlyFromAmong(WeatherStationClient.SupportedBauds.Values.Select(v => v.ToString()).ToArray());
 
-  internal static readonly Option<string> DeviceOption = new("--device")
+  internal static readonly Option<string> DeviceOption = new Option<string>("--device")
   {
     Arity = ArgumentArity.ExactlyOne,
-    Description = "File path to the TTY device, e.g. /dev/ttySC0"
-  };
-
-  internal static readonly Option<int?> LoopOption = new("--loop")
-  {
-    Arity = ArgumentArity.ZeroOrOne,
-    Description = "Milliseconds to loop",
-    DefaultValueFactory = _ => -1,
-  };
-
-  internal static readonly Option<SpiMode?> SpiModeOption = new Option<SpiMode?>("--spi-mode")
+    Description = "File path to the TTY device, e.g. /dev/ttySC0",
+    CompletionSources =
     {
-      Arity = ArgumentArity.ZeroOrOne,
-      CustomParser = argumentResult => argumentResult.Tokens.FirstOrDefault()?.Value is {} value
-        ? (SpiMode)int.Parse(value)
-        : null
+      completionCtx => GetSerialPorts(completionCtx.WordToComplete),
     }
-    .AcceptOnlyFromAmong("0", "1", "2", "3");
-
+  }
+  .AcceptLegalFilePathsOnly();
 
   internal static readonly Option<TimeSpan> ReportIntervalOption = new("--report-interval")
   {
@@ -114,6 +94,26 @@ public partial record CliOptionResult(
     DefaultValueFactory = _ => DefaultCwopUri,
   };
 
+  internal static readonly Option<byte> ModbusUnitIdentifierOption = new("--modbus-unit-identifier")
+  {
+    Arity = ArgumentArity.ExactlyOne,
+    DefaultValueFactory = _ => DefaultModbusUnitIdentifier,
+  };
+
+  internal static readonly Option<int?> RainPinOption = new("--rain-pin")
+  {
+    Arity = ArgumentArity.ExactlyOne,
+    CompletionSources =
+    {
+      completionCtx => SerialPort.GetPortNames()
+    }
+  };
+
+  internal static readonly Option<bool> PrintJsonOption = new("--print-json")
+  {
+    Arity = ArgumentArity.ExactlyOne,
+  };
+
   internal static readonly HelpOption HelpOption = new();
 
   internal static readonly Option<LogLevel> LogLevelOption = new Option<LogLevel>("--log-level")
@@ -126,46 +126,10 @@ public partial record CliOptionResult(
   }
     .AcceptOnlyFromAmong(Enum.GetValues<LogLevel>().Select(l => l.ToString()).ToArray());
 
-  public static TimeSpan TimeSpanCustomParser(ArgumentResult argResult)
+  private static TimeSpan TimeSpanCustomParser(ArgumentResult argResult)
   {
-    var str = argResult.Tokens[0].Value;
-    if (!str.IsWhiteSpace())
-    {
-      if (TimeSpan.TryParse(str, out var stdSpan))
-        return stdSpan;
-
-      if (TimeSpanRe.Match(str) is { Success: true } match)
-      {
-        return TimeSpanGroupParsers
-          .Select(kvp =>
-            match.Groups[kvp.Key] is { Success: true, ValueSpan: { } vs }
-              ? kvp.Value(double.Parse(vs))
-              : TimeSpan.Zero
-          )
-          .Where(t => t != TimeSpan.Zero)
-          .Aggregate((x, y) => x + y);
-      }
-    }
-
-    argResult.AddError("Invalid TimeSpan, should be a standard TimeSpan format or `[[00hr]00min]00sec`");
-    return TimeSpan.Zero;
+    CustomParsing.TryParseTimeSpan(argResult.Tokens[0].Value, out var result, argResult.AddError);
+    return result;
   }
 
-  private static readonly Regex TimeSpanRe = Compile_TimeSpanRe();
-  private static readonly IReadOnlyDictionary<string, Func<double, TimeSpan>> TimeSpanGroupParsers = new Dictionary<string, Func<double, TimeSpan>>
-  {
-    { "second", TimeSpan.FromSeconds },
-    { "minute", TimeSpan.FromMinutes },
-    { "hour",   TimeSpan.FromHours },
-  }.AsReadOnly();
-
-  [GeneratedRegex(
-    """
-    ^\ *
-    (?:(?<hour>   \d+(?:\.\d+)? ) \ *(?:hours?|hrs?|h)  )?\ *
-    (?:(?<minute> \d+(?:\.\d+)? ) \ *(?:minutes?|mins?|m)  )?\ *
-    (?:(?<second> \d+(?:\.\d+)? ) \ *(?:seconds?|secs?|s)  )?\ *
-    $
-    """, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.CultureInvariant)]
-  private static partial Regex Compile_TimeSpanRe();
 }
